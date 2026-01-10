@@ -1,0 +1,61 @@
+import 'dart:typed_data';
+import 'package:cross_file/cross_file.dart';
+import 'package:ffmpeg_wasm/ffmpeg_wasm.dart';
+import 'ffmpeg_service_interface.dart';
+
+class FFmpegServiceImpl implements FFmpegService {
+  late FFmpeg _ffmpeg;
+  bool _isLoaded = false;
+
+  @override
+  Future<void> initialize() async {
+    if (_isLoaded) return;
+    // Initialize FFmpeg.
+    // We assume the default corePath works or is handled by the package.
+    // If not, we might need:
+    // corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
+    _ffmpeg = createFFmpeg(CreateFFmpegParam(log: true));
+
+    await _ffmpeg.load();
+    _isLoaded = true;
+    print('FFmpeg Web Initialized');
+  }
+
+  @override
+  Future<XFile?> convertVideo(
+    XFile input,
+    List<String> args,
+    String outputExtension,
+  ) async {
+    if (!_isLoaded) await initialize();
+
+    final inputData = await input.readAsBytes();
+    // Decide extension based on input or just generic?
+    // FFmpeg sometimes needs correct extension for input probing.
+    final inputName =
+        'input_${DateTime.now().millisecondsSinceEpoch}.${input.name.split('.').last}';
+    final outputName = 'output.$outputExtension';
+
+    print('Writing to MEMFS: $inputName');
+    _ffmpeg.FS.writeFile(inputName, inputData);
+
+    final runArgs = ['-i', inputName, ...args, outputName];
+    print('Running FFmpeg (Web): ${runArgs.join(' ')}');
+
+    await _ffmpeg.run(runArgs);
+
+    print('Reading from MEMFS: $outputName');
+    // readFile returns generic data, cast to Uint8List
+    final outputData = _ffmpeg.FS.readFile(outputName);
+
+    // Cleanup input to free memory
+    _ffmpeg.FS.unlink(inputName);
+    // _ffmpeg.FS.unlink(outputName); // Don't unlink output yet? actually we copy it to XFile
+
+    if (outputData != null) {
+      return XFile.fromData(Uint8List.fromList(outputData), name: outputName);
+    } else {
+      throw Exception('FFmpeg Web: No output generated or file read failure');
+    }
+  }
+}
