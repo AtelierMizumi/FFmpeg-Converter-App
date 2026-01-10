@@ -53,7 +53,7 @@ class FFmpegServiceImpl implements FFmpegService {
     final outputName = outputFilename ?? 'output.$outputExtension';
 
     print('Writing to MEMFS: $inputName');
-    _ffmpeg.FS.writeFile(inputName, inputData);
+    _ffmpeg.writeFile(inputName, inputData);
 
     final runArgs = ['-i', inputName, ...args, outputName];
     print('Running FFmpeg (Web): ${runArgs.join(' ')}');
@@ -62,10 +62,10 @@ class FFmpegServiceImpl implements FFmpegService {
 
     print('Reading from MEMFS: $outputName');
     // readFile returns generic data, cast to Uint8List
-    final outputData = _ffmpeg.FS.readFile(outputName);
+    final outputData = _ffmpeg.readFile(outputName);
 
     // Cleanup input to free memory
-    _ffmpeg.FS.unlink(inputName);
+    _ffmpeg.deleteFile(inputName);
     // _ffmpeg.FS.unlink(outputName); // Don't unlink output yet? actually we copy it to XFile
 
     if (outputData != null) {
