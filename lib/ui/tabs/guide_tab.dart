@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_test_application/l10n/app_localizations.dart';
 
 class GuideTab extends StatelessWidget {
   const GuideTab({super.key});
@@ -8,13 +9,13 @@ class GuideTab extends StatelessWidget {
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (!await launchUrl(uri)) {
-      // Handle error silently or show snackbar if context available
       debugPrint('Could not launch $url');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Center(
@@ -24,62 +25,50 @@ class GuideTab extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Hướng dẫn sử dụng & Tài liệu',
+                l10n.guideTitle,
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const Gap(16),
-              const Text(
-                'Ứng dụng này sử dụng sức mạnh của FFmpeg để chuyển đổi video trực tiếp trên thiết bị của bạn (Web hoặc Desktop) mà không cần gửi dữ liệu lên máy chủ.',
-              ),
+              Text(l10n.guideIntro),
               const Gap(24),
 
-              _buildSectionTitle(context, 'Các thông số kỹ thuật (Settings)'),
+              _buildSectionTitle(context, l10n.sectionSettings),
               const Gap(8),
 
               _buildParamInfo(
                 context,
-                '1. Video Codec',
-                'Bộ mã hóa video. Quyết định cách thức nén dữ liệu hình ảnh.',
-                '- **H.264 (libx264):** Phổ biến nhất, tương thích mọi thiết bị. Cân bằng tốt giữa tốc độ và chất lượng.\n'
-                    '- **VP9 (libvpx-vp9):** Codec mã nguồn mở của Google, thường dùng cho Web/YouTube. Nén tốt hơn H.264 nhưng encode chậm hơn.',
+                l10n.paramVideoCodec,
+                l10n.paramVideoCodecDesc,
+                l10n.paramVideoCodecDetails,
                 'https://trac.ffmpeg.org/wiki/Encode/H.264',
               ),
 
               _buildParamInfo(
                 context,
-                '2. Constant Rate Factor (CRF)',
-                'Chỉ số quyết định chất lượng video đầu ra.',
-                '- Dải giá trị: 0-51.\n'
-                    '- **0:** Lossless (Không nén, dung lượng cực lớn).\n'
-                    '- **23:** Mặc định (Cân bằng).\n'
-                    '- **18:** Chất lượng cao (Gần như gốc).\n'
-                    '- **28:** Chất lượng thấp hơn (Dung lượng nhỏ).\n'
-                    ' *Nguyên tắc: Giá trị càng NHỎ, chất lượng càng CAO, dung lượng càng LỚN.*',
+                l10n.paramCrf,
+                l10n.paramCrfDesc,
+                l10n.paramCrfDetails,
                 'https://trac.ffmpeg.org/wiki/Encode/H.264#crf',
               ),
 
               _buildParamInfo(
                 context,
-                '3. Preset',
-                'Tốc độ nén (Encoding Speed).',
-                '- **ultrafast/superfast:** Rất nhanh, nhưng file output sẽ lớn hơn với cùng một chất lượng.\n'
-                    '- **medium:** Mặc định. Cân bằng.\n'
-                    '- **slow/veryslow:** Rất chậm, nhưng nén file hiệu quả nhất (file nhỏ nhất với cùng chất lượng).\n'
-                    ' *Khuyên dùng: "medium" hoặc "fast" cho nhu cầu thông thường.*',
+                l10n.paramPreset,
+                l10n.paramPresetDesc,
+                l10n.paramPresetDetails,
                 null,
               ),
 
               _buildParamInfo(
                 context,
-                '4. Resolution (Độ phân giải)',
-                'Thay đổi kích thước khung hình video.',
-                '- **Original:** Giữ nguyên gốc.\n'
-                    '- **1080p/720p/480p:** Resize video về chiều cao tương ứng (chiều rộng tự động tính theo tỉ lệ). Giúp giảm dung lượng đáng kể.',
+                l10n.paramResolution,
+                l10n.paramResolutionDesc,
+                l10n.paramResolutionDetails,
                 'https://trac.ffmpeg.org/wiki/Scaling',
               ),
 
               const Gap(24),
-              _buildSectionTitle(context, 'Tài liệu tham khảo'),
+              _buildSectionTitle(context, l10n.sectionReferences),
               const Gap(8),
               _buildLinkButton(
                 'FFmpeg Official Documentation',

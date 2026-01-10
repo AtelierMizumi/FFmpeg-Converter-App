@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_test_application/l10n/app_localizations.dart';
 
 class CreditsTab extends StatelessWidget {
   const CreditsTab({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -21,7 +23,7 @@ class CreditsTab extends StatelessWidget {
           const Gap(32),
 
           Text(
-            'Phát triển bởi',
+            l10n.developedBy,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const Text(
@@ -31,7 +33,7 @@ class CreditsTab extends StatelessWidget {
           const Gap(24),
 
           Text(
-            'Công nghệ sử dụng',
+            l10n.technologies,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const Gap(8),
@@ -46,9 +48,9 @@ class CreditsTab extends StatelessWidget {
           ),
 
           const Gap(32),
-          const Text(
-            'Third Party Libraries & Licenses:',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          Text(
+            l10n.librariesLicenses,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const Gap(8),
           _buildLicenseRow('ffmpeg_wasm', 'MIT License'),

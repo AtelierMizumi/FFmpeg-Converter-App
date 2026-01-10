@@ -1,8 +1,7 @@
-import 'dart:io';
 import 'package:cross_file/cross_file.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 import 'package:gap/gap.dart';
 
 class VideoComparison extends StatefulWidget {
@@ -20,10 +19,18 @@ class VideoComparison extends StatefulWidget {
 }
 
 class _VideoComparisonState extends State<VideoComparison> {
-  late VideoPlayerController _controller1;
-  late VideoPlayerController _controller2;
+  // MediaKit Players
+  late final Player _player1;
+  late final Player _player2;
+  // MediaKit VideoControllers
+  late final VideoController _videoController1;
+  late final VideoController _videoController2;
+
   bool _initialized = false;
+  String? _errorMessage;
   double _splitPos = 0.5; // 0.0 to 1.0
+  bool _isPlaying = false;
+  double _aspectRatio = 16 / 9;
 
   @override
   void initState() {
@@ -32,60 +39,93 @@ class _VideoComparisonState extends State<VideoComparison> {
   }
 
   Future<void> _initControllers() async {
-    if (kIsWeb) {
-      _controller1 = VideoPlayerController.networkUrl(
-        Uri.parse(widget.original.path),
-      );
-      // For processed blob on web, path is a blob url? or we might need different handling if it's blob data.
-      // XFile.path on web refers to blob URL created by XFile.
-      _controller2 = VideoPlayerController.networkUrl(
-        Uri.parse(widget.processed.path),
-      );
-    } else {
-      _controller1 = VideoPlayerController.file(File(widget.original.path));
-      _controller2 = VideoPlayerController.file(File(widget.processed.path));
+    try {
+      _player1 = Player();
+      _player2 = Player();
+
+      _videoController1 = VideoController(_player1);
+      _videoController2 = VideoController(_player2);
+
+      await Future.wait([
+        _player1.open(Media(widget.original.path), play: false),
+        _player2.open(Media(widget.processed.path), play: false),
+      ]);
+
+      // Setup loop
+      _player1.setPlaylistMode(PlaylistMode.loop);
+      _player2.setPlaylistMode(PlaylistMode.loop);
+
+      // Wait for tracks/video params to update aspect ratio
+      // We can listen to one of them.
+      _player1.stream.videoParams.listen((params) {
+        if (params.aspect != null && params.aspect! > 0) {
+          if (mounted) setState(() => _aspectRatio = params.aspect!);
+        }
+      });
+
+      // Subscribe to playing state to update UI
+      _player1.stream.playing.listen((playing) {
+        if (mounted && playing != _isPlaying) {
+          setState(() => _isPlaying = playing);
+        }
+      });
+
+      if (mounted) {
+        setState(() {
+          _initialized = true;
+        });
+        // Auto play
+        _togglePlay();
+      }
+    } catch (e) {
+      debugPrint('Error initializing videos: $e');
+      if (mounted) {
+        setState(() {
+          _errorMessage =
+              'Could not load videos. Format might be unsupported.\nError: $e';
+        });
+      }
     }
-
-    await Future.wait([_controller1.initialize(), _controller2.initialize()]);
-
-    // Loop
-    _controller1.setLooping(true);
-    _controller2.setLooping(true);
-
-    // Sync play/pause is hard without issues, but we can try simple sync
-    _controller1.addListener(_syncController);
-
-    setState(() {
-      _initialized = true;
-    });
-
-    _controller1.play();
-    _controller2.play();
   }
 
-  void _syncController() {
-    // Basic sync: if drift is too large, snap 2 to 1
-    // This is naive and might shudder, but enough for demo.
-    // Actually, maybe just rely on them playing at same rate.
-    // If not playing, ensure position matches?
-    /*
-    if (_controller1.value.isPlaying != _controller2.value.isPlaying) {
-      if (_controller1.value.isPlaying) _controller2.play();
-      else _controller2.pause();
+  void _togglePlay() {
+    if (_isPlaying) {
+      _player1.pause();
+      _player2.pause();
+    } else {
+      _player1.play();
+      _player2.play();
     }
-    */
+  }
+
+  void _replay() {
+    _player1.seek(Duration.zero);
+    _player2.seek(Duration.zero);
+    if (!_isPlaying) _togglePlay();
   }
 
   @override
   void dispose() {
-    _controller1.removeListener(_syncController);
-    _controller1.dispose();
-    _controller2.dispose();
+    _player1.dispose();
+    _player2.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            _errorMessage!,
+            style: const TextStyle(color: Colors.red),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
     if (!_initialized) {
       return const SizedBox(
         height: 300,
@@ -98,7 +138,7 @@ class _VideoComparisonState extends State<VideoComparison> {
         LayoutBuilder(
           builder: (context, constraints) {
             final double width = constraints.maxWidth;
-            final double height = width / _controller1.value.aspectRatio;
+            final double height = width / _aspectRatio;
 
             return GestureDetector(
               onHorizontalDragUpdate: (details) {
@@ -113,7 +153,7 @@ class _VideoComparisonState extends State<VideoComparison> {
                   SizedBox(
                     width: width,
                     height: height,
-                    child: VideoPlayer(_controller2),
+                    child: Video(controller: _videoController2),
                   ),
 
                   // Label Right
@@ -141,7 +181,7 @@ class _VideoComparisonState extends State<VideoComparison> {
                       child: SizedBox(
                         width: width,
                         height: height, // Ensure same height
-                        child: VideoPlayer(_controller1),
+                        child: Video(controller: _videoController1),
                       ),
                     ),
                   ),
@@ -203,30 +243,10 @@ class _VideoComparisonState extends State<VideoComparison> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
-              icon: Icon(
-                _controller1.value.isPlaying ? Icons.pause : Icons.play_arrow,
-              ),
-              onPressed: () {
-                setState(() {
-                  if (_controller1.value.isPlaying) {
-                    _controller1.pause();
-                    _controller2.pause();
-                  } else {
-                    _controller1.play();
-                    _controller2.play();
-                  }
-                });
-              },
+              icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+              onPressed: _togglePlay,
             ),
-            IconButton(
-              icon: const Icon(Icons.replay),
-              onPressed: () {
-                _controller1.seekTo(Duration.zero);
-                _controller2.seekTo(Duration.zero);
-                _controller1.play();
-                _controller2.play();
-              },
-            ),
+            IconButton(icon: const Icon(Icons.replay), onPressed: _replay),
           ],
         ),
       ],
