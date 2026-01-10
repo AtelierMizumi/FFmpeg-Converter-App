@@ -25,9 +25,12 @@ class FFmpegServiceImpl implements FFmpegService {
   Future<XFile?> convertVideo(
     XFile input,
     List<String> args,
-    String outputExtension,
-  ) async {
+    String outputExtension, {
+    String? outputDirectory,
+  }) async {
     if (!_isLoaded) await initialize();
+    // Note: outputDirectory is ignored on Web as we cannot write directly to FS.
+    // The user will save the returned blob.
 
     final inputData = await input.readAsBytes();
     // Decide extension based on input or just generic?

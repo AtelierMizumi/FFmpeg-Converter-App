@@ -13,8 +13,9 @@ class FFmpegServiceImpl implements FFmpegService {
   Future<XFile?> convertVideo(
     XFile input,
     List<String> args,
-    String outputExtension,
-  ) {
+    String outputExtension, {
+    String? outputDirectory,
+  }) {
     throw UnimplementedError(
       'FFmpegService is not implemented for this platform',
     );

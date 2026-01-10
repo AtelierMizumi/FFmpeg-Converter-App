@@ -5,6 +5,7 @@ abstract class FFmpegService {
   Future<XFile?> convertVideo(
     XFile input,
     List<String> args,
-    String outputExtension,
-  );
+    String outputExtension, {
+    String? outputDirectory,
+  });
 }

@@ -1,9 +1,12 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:gap/gap.dart';
+import 'package:flutter_test_application/l10n/app_localizations.dart';
 import '../../services/ffmpeg_service.dart';
+import '../widgets/video_comparison.dart';
 
 class ConverterTab extends StatefulWidget {
   const ConverterTab({super.key});
@@ -17,6 +20,7 @@ class _ConverterTabState extends State<ConverterTab>
   final FFmpegService _ffmpegService = FFmpegServiceFactory.getService();
   XFile? _selectedFile;
   XFile? _outputFile;
+  String? _outputDirectory; // Directory to save output
   bool _isProcessing = false;
   String _statusMessage = 'Ready';
   bool _isDragging = false;
@@ -75,7 +79,17 @@ class _ConverterTabState extends State<ConverterTab>
     }
   }
 
+  Future<void> _pickOutputDirectory() async {
+    String? result = await FilePicker.platform.getDirectoryPath();
+    if (result != null) {
+      setState(() {
+        _outputDirectory = result;
+      });
+    }
+  }
+
   Future<void> _processVideo() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_selectedFile == null) return;
     if (!_initialized) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -84,9 +98,18 @@ class _ConverterTabState extends State<ConverterTab>
       return;
     }
 
+    // Require output directory on Desktop for safety (as requested: prevent memory overflow)
+    // On Web, we can't really enforce this in the same way, but we can warn.
+    if (!kIsWeb && _outputDirectory == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.folderExportRequired)));
+      return;
+    }
+
     setState(() {
       _isProcessing = true;
-      _statusMessage = 'Processing...';
+      _statusMessage = l10n.processing;
       _outputFile = null;
     });
 
@@ -136,23 +159,68 @@ class _ConverterTabState extends State<ConverterTab>
         _selectedFile!,
         args,
         _container,
+        outputDirectory: _outputDirectory,
       );
 
       if (mounted) {
         setState(() {
           _outputFile = result;
-          _statusMessage = 'Success! Output ready.';
+          _statusMessage = l10n.statusSuccess;
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _statusMessage = 'Error: $e');
+      if (mounted) setState(() => _statusMessage = l10n.statusError(e));
       debugPrint(e.toString());
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
   }
 
+  void _showComparison() {
+    final l10n = AppLocalizations.of(context)!;
+    if (_selectedFile == null || _outputFile == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000, maxHeight: 800),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.compareVideo,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                Expanded(
+                  child: VideoComparison(
+                    original: _selectedFile!,
+                    processed: _outputFile!,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _saveOutput() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_outputFile == null) return;
     String? outputFile = await FilePicker.platform.saveFile(
       dialogTitle: 'Save Video',
@@ -170,6 +238,7 @@ class _ConverterTabState extends State<ConverterTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Container(
         constraints: const BoxConstraints(maxWidth: 900),
@@ -183,13 +252,47 @@ class _ConverterTabState extends State<ConverterTab>
               child: Column(
                 children: [
                   _buildDropZone(context),
-                  const Gap(24),
+                  const Gap(16),
+                  if (!kIsWeb) ...[
+                    InkWell(
+                      onTap: _pickOutputDirectory,
+                      borderRadius: BorderRadius.circular(8),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: l10n.pickOutputFolder,
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.folder,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            const Gap(8),
+                            Expanded(
+                              child: Text(
+                                _outputDirectory ?? l10n.notSelected,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const Icon(Icons.arrow_drop_down),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Gap(24),
+                  ],
+
                   if (_isProcessing)
-                    const Column(
+                    Column(
                       children: [
-                        CircularProgressIndicator(),
-                        Gap(16),
-                        Text('Đang xử lý...'),
+                        const CircularProgressIndicator(),
+                        const Gap(16),
+                        Text(l10n.processing),
                       ],
                     )
                   else
@@ -201,23 +304,36 @@ class _ConverterTabState extends State<ConverterTab>
                               ? _processVideo
                               : null,
                           icon: const Icon(Icons.play_arrow),
-                          label: const Text('Bắt đầu chuyển đổi'),
+                          label: Text(l10n.startConversion),
                           style: FilledButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                         ),
                         const Gap(16),
-                        if (_outputFile != null)
-                          FilledButton.icon(
-                            onPressed: _saveOutput,
-                            icon: const Icon(Icons.download),
-                            label: const Text('Lưu file kết quả'),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
+                        if (_outputFile != null) ...[
+                          if (kIsWeb)
+                            FilledButton.icon(
+                              onPressed: _saveOutput,
+                              icon: const Icon(Icons.download),
+                              label: Text(l10n.saveOutput),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                              ),
+                            ),
+                          const Gap(8),
+                          OutlinedButton.icon(
+                            onPressed: _showComparison,
+                            icon: const Icon(Icons.compare_arrows),
+                            label: Text(l10n.compareVideo),
+                            style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                           ),
+                        ],
                       ],
                     ),
                   const Gap(16),
@@ -242,34 +358,34 @@ class _ConverterTabState extends State<ConverterTab>
                   child: ListView(
                     children: [
                       Text(
-                        'Cấu hình Encode',
+                        l10n.settingsTitle,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const Gap(20),
 
                       _buildDropdown(
-                        'Container Format (Đuôi file)',
+                        l10n.containerFormat,
                         _container,
                         _containers,
                         (v) => setState(() => _container = v!),
                       ),
                       const Gap(16),
                       _buildDropdown(
-                        'Video Codec',
+                        l10n.videoCodec,
                         _videoCodec,
                         ['libx264', 'libvpx-vp9', 'copy'],
                         (v) => setState(() => _videoCodec = v!),
                       ),
                       const Gap(16),
                       _buildDropdown(
-                        'Resolution (Độ phân giải)',
+                        l10n.resolution,
                         _resolution,
                         _resolutions,
                         (v) => setState(() => _resolution = v!),
                       ),
                       const Gap(16),
                       _buildDropdown(
-                        'Audio Settings',
+                        l10n.audioSettings,
                         _audioSetting,
                         _audioOptions,
                         (v) => setState(() => _audioSetting = v!),
@@ -280,7 +396,7 @@ class _ConverterTabState extends State<ConverterTab>
                       const Gap(16),
 
                       Text(
-                        'Video Quality (CRF): ${_crf.toInt()}',
+                        l10n.qualityCrf(_crf.toInt()),
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Slider(
@@ -291,13 +407,16 @@ class _ConverterTabState extends State<ConverterTab>
                         label: _crf.round().toString(),
                         onChanged: (v) => setState(() => _crf = v),
                       ),
-                      const Text(
-                        'Lower = Better Quality (Larger Size)',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      Text(
+                        l10n.lowerBetter,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
                       ),
 
                       const Gap(16),
-                      _buildDropdown('Preset (Speed)', _preset, [
+                      _buildDropdown(l10n.presetSpeed, _preset, [
                         'ultrafast',
                         'fast',
                         'medium',
@@ -335,6 +454,7 @@ class _ConverterTabState extends State<ConverterTab>
   }
 
   Widget _buildDropZone(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: DropTarget(
@@ -362,7 +482,7 @@ class _ConverterTabState extends State<ConverterTab>
               border: Border.all(
                 color: Theme.of(context).colorScheme.outline,
                 width: 2,
-                style: BorderStyle.dashed,
+                style: BorderStyle.solid,
               ),
               borderRadius: BorderRadius.circular(16),
             ),
@@ -377,8 +497,8 @@ class _ConverterTabState extends State<ConverterTab>
                 const Gap(16),
                 Text(
                   _selectedFile == null
-                      ? 'Kéo thả video vào đây\nhoặc click để chọn file'
-                      : 'Đã chọn:\n${_selectedFile!.name}',
+                      ? l10n.dragDropText
+                      : l10n.fileSelected(_selectedFile!.name),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),

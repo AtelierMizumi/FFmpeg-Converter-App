@@ -97,14 +97,22 @@ class FFmpegServiceImpl implements FFmpegService {
   Future<XFile?> convertVideo(
     XFile input,
     List<String> args,
-    String outputExtension,
-  ) async {
+    String outputExtension, {
+    String? outputDirectory,
+  }) async {
     if (_ffmpegPath == null) await initialize();
 
-    final tempDir = await getTemporaryDirectory();
+    String targetDir;
+    if (outputDirectory != null) {
+      targetDir = outputDirectory;
+    } else {
+      final tempDir = await getTemporaryDirectory();
+      targetDir = tempDir.path;
+    }
+
     final outputName =
         'output_${DateTime.now().millisecondsSinceEpoch}.$outputExtension';
-    final outputPath = p.join(tempDir.path, outputName);
+    final outputPath = p.join(targetDir, outputName);
 
     // Build arguments: -i INPUT ARGS OUTPUT
     final ffmpegArgs = <String>['-y', '-i', input.path, ...args, outputPath];
