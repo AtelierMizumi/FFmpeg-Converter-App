@@ -15,6 +15,8 @@ class FFmpegServiceImpl implements FFmpegService {
     List<String> args,
     String outputExtension, {
     String? outputDirectory,
+    String? outputFilename,
+    ProgressCallback? onProgress,
   }) {
     throw UnimplementedError(
       'FFmpegService is not implemented for this platform',

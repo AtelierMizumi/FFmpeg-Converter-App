@@ -1,5 +1,7 @@
 import 'package:cross_file/cross_file.dart';
 
+typedef ProgressCallback = void Function(double progress, String message);
+
 abstract class FFmpegService {
   Future<void> initialize();
   Future<XFile?> convertVideo(
@@ -7,5 +9,7 @@ abstract class FFmpegService {
     List<String> args,
     String outputExtension, {
     String? outputDirectory,
+    String? outputFilename,
+    ProgressCallback? onProgress,
   });
 }

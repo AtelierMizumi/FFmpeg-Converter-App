@@ -99,6 +99,8 @@ class FFmpegServiceImpl implements FFmpegService {
     List<String> args,
     String outputExtension, {
     String? outputDirectory,
+    String? outputFilename,
+    ProgressCallback? onProgress,
   }) async {
     if (_ffmpegPath == null) await initialize();
 
@@ -111,6 +113,7 @@ class FFmpegServiceImpl implements FFmpegService {
     }
 
     final outputName =
+        outputFilename ??
         'output_${DateTime.now().millisecondsSinceEpoch}.$outputExtension';
     final outputPath = p.join(targetDir, outputName);
 
@@ -119,12 +122,74 @@ class FFmpegServiceImpl implements FFmpegService {
 
     print('Running bundled FFmpeg: $_ffmpegPath ${ffmpegArgs.join(' ')}');
 
-    final result = await Process.run(_ffmpegPath!, ffmpegArgs);
+    final process = await Process.start(_ffmpegPath!, ffmpegArgs);
 
-    if (result.exitCode != 0) {
-      throw Exception('FFmpeg failed: ${result.stderr}');
+    // Duration parsing state variables
+    Duration? totalDuration;
+
+    // Listen to stderr for progress (FFmpeg logs to stderr)
+    process.stderr.transform(SystemEncoding().decoder).listen((data) {
+      if (onProgress != null) {
+        // Parse Duration: 00:00:05.12
+        if (totalDuration == null) {
+          final durMatch = RegExp(
+            r'Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})',
+          ).firstMatch(data);
+          if (durMatch != null) {
+            try {
+              final h = int.parse(durMatch.group(1)!);
+              final m = int.parse(durMatch.group(2)!);
+              final s = double.parse(durMatch.group(3)!);
+              totalDuration = Duration(
+                hours: h,
+                minutes: m,
+                milliseconds: (s * 1000).toInt(),
+              );
+            } catch (e) {
+              // ignore parse error
+            }
+          }
+        }
+
+        // Parse time=00:00:02.50
+        if (totalDuration != null) {
+          final timeMatch = RegExp(
+            r'time=(\d{2}):(\d{2}):(\d{2}\.\d{2})',
+          ).firstMatch(data);
+          if (timeMatch != null) {
+            try {
+              final h = int.parse(timeMatch.group(1)!);
+              final m = int.parse(timeMatch.group(2)!);
+              final s = double.parse(timeMatch.group(3)!);
+              final currentDuration = Duration(
+                hours: h,
+                minutes: m,
+                milliseconds: (s * 1000).toInt(),
+              );
+
+              final progress =
+                  currentDuration.inMilliseconds /
+                  totalDuration!.inMilliseconds;
+              final clampedProgress = progress > 1.0 ? 1.0 : progress;
+              onProgress(
+                clampedProgress,
+                'Converting... ${(clampedProgress * 100).toInt()}%',
+              );
+            } catch (e) {
+              // ignore
+            }
+          }
+        }
+      }
+    });
+
+    final exitCode = await process.exitCode;
+
+    if (exitCode != 0) {
+      throw Exception('FFmpeg failed with exit code $exitCode');
     }
 
+    if (onProgress != null) onProgress(1.0, 'Completed');
     return XFile(outputPath);
   }
 }
