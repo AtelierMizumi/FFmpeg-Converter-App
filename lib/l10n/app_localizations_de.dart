@@ -91,5 +91,69 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get folderExportRequired =>
-      'Bitte wählen Sie vor der Verarbeitung einen Exportordner!';
+      'Bitte wählen Sie vor der Verarbeitung den Exportordner aus!';
+
+  @override
+  String get guideTitle => 'Benutzerhandbuch & Dokumentation';
+
+  @override
+  String get guideIntro =>
+      'Diese Anwendung nutzt FFmpeg, um Videos direkt auf Ihrem Gerät (Web oder Desktop) zu konvertieren, ohne Daten an einen Server zu senden.';
+
+  @override
+  String get sectionSettings => 'Technische Einstellungen';
+
+  @override
+  String get paramVideoCodec => '1. Video Codec';
+
+  @override
+  String get paramVideoCodecDesc =>
+      'Der Video-Encoder. Bestimmt, wie Bilddaten komprimiert werden.';
+
+  @override
+  String get paramVideoCodecDetails =>
+      '- **H.264 (libx264):** Am beliebtesten, kompatibel mit fast allen Geräten. Gute Balance zwischen Geschwindigkeit und Qualität.\n- **VP9 (libvpx-vp9):** Googles Open-Source-Codec, oft verwendet für Web/YouTube. Bessere Komprimierung als H.264, aber langsamere Codierung.';
+
+  @override
+  String get paramCrf => '2. Constant Rate Factor (CRF)';
+
+  @override
+  String get paramCrfDesc =>
+      'Die Kennzahl, die die Ausgabequalität des Videos bestimmt.';
+
+  @override
+  String get paramCrfDetails =>
+      '- Bereich: 0-51.\n- **0:** Verlustfrei (Keine Komprimierung, riesige Dateigröße).\n- **23:** Standard (Ausgewogen).\n- **18:** Hohe Qualität (Visuell verlustfrei).\n- **28:** Geringere Qualität (Kleinere Dateigröße).\n *Regel: NIEDRIGERER Wert = HÖHERE Qualität = GRÖSSERE Größe.*';
+
+  @override
+  String get paramPreset => '3. Preset';
+
+  @override
+  String get paramPresetDesc => 'Komprimierungsgeschwindigkeit.';
+
+  @override
+  String get paramPresetDetails =>
+      '- **ultrafast/superfast:** Sehr schnell, aber größere Ausgabedatei bei gleicher Qualität.\n- **medium:** Standard. Ausgewogen.\n- **slow/veryslow:** Sehr langsam, aber effizienteste Komprimierung (kleinste Datei bei gleicher Qualität).\n *Empfehlung: \"medium\" oder \"fast\" für den allgemeinen Gebrauch.*';
+
+  @override
+  String get paramResolution => '4. Auflösung';
+
+  @override
+  String get paramResolutionDesc => 'Videodimensionen ändern.';
+
+  @override
+  String get paramResolutionDetails =>
+      '- **Original:** Originalgröße beibehalten.\n- **1080p/720p/480p:** Videohöhe auf bestimmten Wert ändern (Breite automatisch berechnet). Reduziert die Dateigröße erheblich.';
+
+  @override
+  String get sectionReferences => 'Referenzen';
+
+  @override
+  String get developedBy => 'Entwickelt von';
+
+  @override
+  String get technologies => 'Verwendete Technologien';
+
+  @override
+  String get librariesLicenses => 'Drittanbieter-Bibliotheken & Lizenzen';
 }
