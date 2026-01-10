@@ -65,7 +65,7 @@ class FFmpegServiceImpl implements FFmpegService {
     final outputData = _ffmpeg.readFile(outputName);
 
     // Cleanup input to free memory
-    flutter build web --release --base-href /flutter_test_application/    _ffmpeg.unlink(inputName);
+    _ffmpeg.unlink(inputName);
     // _ffmpeg.FS.unlink(outputName); // Don't unlink output yet? actually we copy it to XFile
 
     if (outputData != null) {
