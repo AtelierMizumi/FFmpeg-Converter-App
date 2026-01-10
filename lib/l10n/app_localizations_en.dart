@@ -92,4 +92,67 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get folderExportRequired =>
       'Please select Export Folder before processing!';
+
+  @override
+  String get guideTitle => 'User Guide & Documentation';
+
+  @override
+  String get guideIntro =>
+      'This application leverages FFmpeg to convert videos directly on your device (Web or Desktop) without processing data on a server.';
+
+  @override
+  String get sectionSettings => 'Technical Settings';
+
+  @override
+  String get paramVideoCodec => '1. Video Codec';
+
+  @override
+  String get paramVideoCodecDesc =>
+      'The video encoder. Determines how image data is compressed.';
+
+  @override
+  String get paramVideoCodecDetails =>
+      '- **H.264 (libx264):** Most popular, compatible with almost all devices. Good balance of speed and quality.\n- **VP9 (libvpx-vp9):** Google\'s open source codec, often used for Web/YouTube. Better compression than H.264 but slower encoding.';
+
+  @override
+  String get paramCrf => '2. Constant Rate Factor (CRF)';
+
+  @override
+  String get paramCrfDesc => 'The metric determining output video quality.';
+
+  @override
+  String get paramCrfDetails =>
+      '- Range: 0-51.\n- **0:** Lossless (No compression, huge file size).\n- **23:** Default (Balanced).\n- **18:** High Quality (Visually lossless).\n- **28:** Lower Quality (Smaller file size).\n *Rule: LOWER value = HIGHER quality = LARGER size.*';
+
+  @override
+  String get paramPreset => '3. Preset';
+
+  @override
+  String get paramPresetDesc => 'Compression Speed.';
+
+  @override
+  String get paramPresetDetails =>
+      '- **ultrafast/superfast:** Very fast, but larger output file for the same quality.\n- **medium:** Default. Balanced.\n- **slow/veryslow:** Very slow, but most efficient compression (smallest file for same quality).\n *Recommendation: \"medium\" or \"fast\" for general use.*';
+
+  @override
+  String get paramResolution => '4. Resolution';
+
+  @override
+  String get paramResolutionDesc => 'Resize video dimensions.';
+
+  @override
+  String get paramResolutionDetails =>
+      '- **Original:** Keep original size.\n- **1080p/720p/480p:** Resize video height to specific value (width calculated automatically). Significantly reduces file size.';
+
+  @override
+  String get sectionReferences => 'References';
+
+  @override
+  String get developedBy => 'Developed by';
+
+  @override
+  String get technologies => 'Technologies Used';
+
+  @override
+  String get librariesLicenses => 'Third Party Libraries & Licenses';
 }
