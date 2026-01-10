@@ -257,6 +257,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please select Export Folder before processing!'**
   String get folderExportRequired;
+
+  /// No description provided for @guideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'User Guide & Documentation'**
+  String get guideTitle;
+
+  /// No description provided for @guideIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'This application leverages FFmpeg to convert videos directly on your device (Web or Desktop) without processing data on a server.'**
+  String get guideIntro;
+
+  /// No description provided for @sectionSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical Settings'**
+  String get sectionSettings;
+
+  /// No description provided for @paramVideoCodec.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Video Codec'**
+  String get paramVideoCodec;
+
+  /// No description provided for @paramVideoCodecDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The video encoder. Determines how image data is compressed.'**
+  String get paramVideoCodecDesc;
+
+  /// No description provided for @paramVideoCodecDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'- **H.264 (libx264):** Most popular, compatible with almost all devices. Good balance of speed and quality.\n- **VP9 (libvpx-vp9):** Google\'s open source codec, often used for Web/YouTube. Better compression than H.264 but slower encoding.'**
+  String get paramVideoCodecDetails;
+
+  /// No description provided for @paramCrf.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Constant Rate Factor (CRF)'**
+  String get paramCrf;
+
+  /// No description provided for @paramCrfDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The metric determining output video quality.'**
+  String get paramCrfDesc;
+
+  /// No description provided for @paramCrfDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'- Range: 0-51.\n- **0:** Lossless (No compression, huge file size).\n- **23:** Default (Balanced).\n- **18:** High Quality (Visually lossless).\n- **28:** Lower Quality (Smaller file size).\n *Rule: LOWER value = HIGHER quality = LARGER size.*'**
+  String get paramCrfDetails;
+
+  /// No description provided for @paramPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Preset'**
+  String get paramPreset;
+
+  /// No description provided for @paramPresetDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Compression Speed.'**
+  String get paramPresetDesc;
+
+  /// No description provided for @paramPresetDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'- **ultrafast/superfast:** Very fast, but larger output file for the same quality.\n- **medium:** Default. Balanced.\n- **slow/veryslow:** Very slow, but most efficient compression (smallest file for same quality).\n *Recommendation: \"medium\" or \"fast\" for general use.*'**
+  String get paramPresetDetails;
+
+  /// No description provided for @paramResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'4. Resolution'**
+  String get paramResolution;
+
+  /// No description provided for @paramResolutionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Resize video dimensions.'**
+  String get paramResolutionDesc;
+
+  /// No description provided for @paramResolutionDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'- **Original:** Keep original size.\n- **1080p/720p/480p:** Resize video height to specific value (width calculated automatically). Significantly reduces file size.'**
+  String get paramResolutionDetails;
+
+  /// No description provided for @sectionReferences.
+  ///
+  /// In en, this message translates to:
+  /// **'References'**
+  String get sectionReferences;
+
+  /// No description provided for @developedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Developed by'**
+  String get developedBy;
+
+  /// No description provided for @technologies.
+  ///
+  /// In en, this message translates to:
+  /// **'Technologies Used'**
+  String get technologies;
+
+  /// No description provided for @librariesLicenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Third Party Libraries & Licenses'**
+  String get librariesLicenses;
 }
 
 class _AppLocalizationsDelegate

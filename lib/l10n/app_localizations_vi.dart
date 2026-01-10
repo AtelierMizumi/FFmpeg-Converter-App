@@ -92,4 +92,67 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get folderExportRequired =>
       'Vui lòng chọn thư mục lưu (Export Folder) trước khi xử lý!';
+
+  @override
+  String get guideTitle => 'Hướng dẫn sử dụng & Tài liệu';
+
+  @override
+  String get guideIntro =>
+      'Ứng dụng này sử dụng sức mạnh của FFmpeg để chuyển đổi video trực tiếp trên thiết bị của bạn (Web hoặc Desktop) mà không cần gửi dữ liệu lên máy chủ.';
+
+  @override
+  String get sectionSettings => 'Các thông số kỹ thuật (Settings)';
+
+  @override
+  String get paramVideoCodec => '1. Video Codec';
+
+  @override
+  String get paramVideoCodecDesc =>
+      'Bộ mã hóa video. Quyết định cách thức nén dữ liệu hình ảnh.';
+
+  @override
+  String get paramVideoCodecDetails =>
+      '- **H.264 (libx264):** Phổ biến nhất, tương thích mọi thiết bị. Cân bằng tốt giữa tốc độ và chất lượng.\n- **VP9 (libvpx-vp9):** Codec mã nguồn mở của Google, thường dùng cho Web/YouTube. Nén tốt hơn H.264 nhưng encode chậm hơn.';
+
+  @override
+  String get paramCrf => '2. Constant Rate Factor (CRF)';
+
+  @override
+  String get paramCrfDesc => 'Chỉ số quyết định chất lượng video đầu ra.';
+
+  @override
+  String get paramCrfDetails =>
+      '- Dải giá trị: 0-51.\n- **0:** Lossless (Không nén, dung lượng cực lớn).\n- **23:** Mặc định (Cân bằng).\n- **18:** Chất lượng cao (Gần như gốc).\n- **28:** Chất lượng thấp hơn (Dung lượng nhỏ).\n *Nguyên tắc: Giá trị càng NHỎ, chất lượng càng CAO, dung lượng càng LỚN.*';
+
+  @override
+  String get paramPreset => '3. Preset';
+
+  @override
+  String get paramPresetDesc => 'Tốc độ nén (Encoding Speed).';
+
+  @override
+  String get paramPresetDetails =>
+      '- **ultrafast/superfast:** Rất nhanh, nhưng file output sẽ lớn hơn với cùng một chất lượng.\n- **medium:** Mặc định. Cân bằng.\n- **slow/veryslow:** Rất chậm, nhưng nén file hiệu quả nhất (file nhỏ nhất với cùng chất lượng).\n *Khuyên dùng: \"medium\" hoặc \"fast\" cho nhu cầu thông thường.*';
+
+  @override
+  String get paramResolution => '4. Resolution (Độ phân giải)';
+
+  @override
+  String get paramResolutionDesc => 'Thay đổi kích thước khung hình video.';
+
+  @override
+  String get paramResolutionDetails =>
+      '- **Original:** Giữ nguyên gốc.\n- **1080p/720p/480p:** Resize video về chiều cao tương ứng (chiều rộng tự động tính theo tỉ lệ). Giúp giảm dung lượng đáng kể.';
+
+  @override
+  String get sectionReferences => 'Tài liệu tham khảo';
+
+  @override
+  String get developedBy => 'Phát triển bởi';
+
+  @override
+  String get technologies => 'Công nghệ sử dụng';
+
+  @override
+  String get librariesLicenses => 'Thư viện bên thứ ba & Giấy phép';
 }
