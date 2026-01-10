@@ -494,6 +494,21 @@ class _ConverterTabState extends State<ConverterTab>
                         'slow',
                         'veryslow',
                       ], (v) => setState(() => _preset = v!)),
+
+                      const Gap(32),
+                      const Divider(),
+                      const Gap(8),
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: () => launchUrl(
+                            Uri.parse(
+                              'https://github.com/AtelierMizumi/flutter_test_application/releases',
+                            ),
+                          ),
+                          icon: const Icon(Icons.system_update),
+                          label: const Text('Download Desktop Version'),
+                        ),
+                      ),
                     ],
                   ),
                 ),
