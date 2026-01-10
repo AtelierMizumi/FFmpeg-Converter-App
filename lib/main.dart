@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:media_kit/media_kit.dart';
 import 'package:flutter_test_application/l10n/app_localizations.dart';
 import 'ui/tabs/converter_tab.dart';
 import 'ui/tabs/guide_tab.dart';
 import 'ui/tabs/credits_tab.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
   runApp(const FFmpegConverterApp());
 }
 

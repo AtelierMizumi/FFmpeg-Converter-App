@@ -27,17 +27,30 @@ class FFmpegServiceImpl implements FFmpegService {
     List<String> args,
     String outputExtension, {
     String? outputDirectory,
+    String? outputFilename,
+    ProgressCallback? onProgress,
   }) async {
     if (!_isLoaded) await initialize();
     // Note: outputDirectory is ignored on Web as we cannot write directly to FS.
     // The user will save the returned blob.
+
+    // Register progress callback
+    if (onProgress != null) {
+      _ffmpeg.setProgress((p) {
+        // ratio is 0.0 to 1.0 (sometimes > 1 in logs but mainly 0-1)
+        onProgress(
+          p.ratio,
+          'Processing... ${(p.ratio * 100).toStringAsFixed(1)}%',
+        );
+      });
+    }
 
     final inputData = await input.readAsBytes();
     // Decide extension based on input or just generic?
     // FFmpeg sometimes needs correct extension for input probing.
     final inputName =
         'input_${DateTime.now().millisecondsSinceEpoch}.${input.name.split('.').last}';
-    final outputName = 'output.$outputExtension';
+    final outputName = outputFilename ?? 'output.$outputExtension';
 
     print('Writing to MEMFS: $inputName');
     _ffmpeg.FS.writeFile(inputName, inputData);

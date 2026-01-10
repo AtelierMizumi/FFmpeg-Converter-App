@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:gap/gap.dart';
+import 'package:open_file/open_file.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_test_application/l10n/app_localizations.dart';
 import '../../services/ffmpeg_service.dart';
 import '../widgets/video_comparison.dart';
@@ -18,10 +21,12 @@ class ConverterTab extends StatefulWidget {
 class _ConverterTabState extends State<ConverterTab>
     with AutomaticKeepAliveClientMixin {
   final FFmpegService _ffmpegService = FFmpegServiceFactory.getService();
+  final TextEditingController _filenameController = TextEditingController();
   XFile? _selectedFile;
   XFile? _outputFile;
   String? _outputDirectory; // Directory to save output
   bool _isProcessing = false;
+  double _progress = 0.0;
   String _statusMessage = 'Ready';
   bool _isDragging = false;
   bool _initialized = false;
@@ -109,6 +114,7 @@ class _ConverterTabState extends State<ConverterTab>
 
     setState(() {
       _isProcessing = true;
+      _progress = 0.0;
       _statusMessage = l10n.processing;
       _outputFile = null;
     });
@@ -155,17 +161,35 @@ class _ConverterTabState extends State<ConverterTab>
         args.addAll(['-c:a', 'aac', '-b:a', '128k']);
       }
 
+      String? customFilename;
+      if (_filenameController.text.isNotEmpty) {
+        customFilename = _filenameController.text;
+        if (!customFilename.endsWith('.$_container')) {
+          customFilename += '.$_container';
+        }
+      }
+
       final result = await _ffmpegService.convertVideo(
         _selectedFile!,
         args,
         _container,
         outputDirectory: _outputDirectory,
+        outputFilename: customFilename,
+        onProgress: (progress, message) {
+          if (mounted) {
+            setState(() {
+              _progress = progress;
+              _statusMessage = message;
+            });
+          }
+        },
       );
 
       if (mounted) {
         setState(() {
           _outputFile = result;
           _statusMessage = l10n.statusSuccess;
+          _progress = 1.0;
         });
       }
     } catch (e) {
@@ -284,13 +308,24 @@ class _ConverterTabState extends State<ConverterTab>
                         ),
                       ),
                     ),
+                    const Gap(16),
+                    TextField(
+                      controller: _filenameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Output Filename (Optional)',
+                        border: OutlineInputBorder(),
+                        helperText: 'Leave empty for auto-generated name',
+                      ),
+                    ),
                     const Gap(24),
                   ],
 
                   if (_isProcessing)
                     Column(
                       children: [
-                        const CircularProgressIndicator(),
+                        LinearProgressIndicator(value: _progress),
+                        const Gap(8),
+                        Text('${(_progress * 100).toInt()}%'),
                         const Gap(16),
                         Text(l10n.processing),
                       ],
@@ -323,7 +358,43 @@ class _ConverterTabState extends State<ConverterTab>
                                   vertical: 16,
                                 ),
                               ),
+                            )
+                          else ...[
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () =>
+                                        OpenFile.open(_outputFile!.path),
+                                    icon: const Icon(Icons.open_in_new),
+                                    label: const Text('Open Video'),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const Gap(8),
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () {
+                                      final path = _outputFile!.path;
+                                      final dir = File(path).parent.path;
+                                      launchUrl(Uri.directory(dir));
+                                    },
+                                    icon: const Icon(Icons.folder_open),
+                                    label: const Text('Open Folder'),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
+                          ],
                           const Gap(8),
                           OutlinedButton.icon(
                             onPressed: _showComparison,
