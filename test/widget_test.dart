@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ffmpeg_converter_app/main.dart';
-import 'package:ffmpeg_converter_app/services/video_validator.dart';
+import 'package:flutter_test_application/main.dart';
+import 'package:flutter_test_application/services/video_validator.dart';
 import 'package:cross_file/cross_file.dart';
 import 'dart:typed_data';
 
