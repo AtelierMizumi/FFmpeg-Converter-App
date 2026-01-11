@@ -1,6 +1,7 @@
 name = "flutter-analytics-api"
 main = "src/index.ts"
-compatibility_date = "2024-01-10"
+compatibility_date = "2024-09-23"
+compatibility_flags = [ "nodejs_compat" ]
 
 # Cloudflare Workers configuration
 # This worker will be deployed to: https://flutter-analytics-api.YOUR_SUBDOMAIN.workers.dev

@@ -9,17 +9,22 @@
     "tail": "wrangler tail",
     "test": "echo \"No tests yet\" && exit 0"
   },
-  "keywords": ["cloudflare", "worker", "analytics", "postgresql"],
+  "keywords": [
+    "cloudflare",
+    "worker",
+    "analytics",
+    "postgresql"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@neondatabase/serverless": "^0.10.4",
     "hono": "^4.7.12",
+    "postgres": "^3.4.8",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
-    "wrangler": "^3.94.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "wrangler": "^3.94.0"
   }
 }
