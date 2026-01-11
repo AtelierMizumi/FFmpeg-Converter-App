@@ -112,7 +112,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get paramVideoCodecDetails =>
-      '- **H.264 (libx264):** Am beliebtesten, kompatibel mit fast allen Geräten. Gute Balance zwischen Geschwindigkeit und Qualität.\n- **VP9 (libvpx-vp9):** Googles Open-Source-Codec, oft verwendet für Web/YouTube. Bessere Komprimierung als H.264, aber langsamere Codierung.';
+      '- **H.264 (libx264):** Am beliebtesten, kompatibel mit fast allen Geräten. Gute Balance zwischen Geschwindigkeit und Qualität.\n- **H.265 (libx265):** Höhere Komprimierungseffizienz als H.264 (ca. 50% kleinere Dateien). Erfordert mehr Rechenleistung zum Enkodieren/Dekodieren.\n- **VP9 (libvpx-vp9):** Googles Open-Source-Codec, oft verwendet für Web/YouTube. Bessere Komprimierung als H.264, aber langsamere Codierung.\n- **AV1 (libaom-av1):** Codec der nächsten Generation. Beste Komprimierung, lizenzfrei, aber sehr langsame Kodierung ohne Hardwarebeschleunigung.\n- **MPEG-4 (libxvid):** Älterer Standard. Sehr hohe Kompatibilität mit älteren Geräten, aber weniger effiziente Komprimierung.';
 
   @override
   String get paramCrf => '2. Constant Rate Factor (CRF)';

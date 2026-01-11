@@ -81,6 +81,18 @@ class VideoValidator {
           error: 'VP9 CRF must be between 0 and 63',
         );
       }
+    } else if (codec.contains('av1')) {
+      if (crf < 0 || crf > 63) {
+        return ValidationResult(
+          isValid: false,
+          error: 'AV1 CRF must be between 0 and 63',
+        );
+      }
+    } else if (codec.contains('xvid') || codec.contains('mpeg4')) {
+      // Xvid (MPEG-4) typically uses qscale 1-31, but often mapped to CRF in wrappers or -q:v
+      // For simplicity we allow the standard range but warn or map internally if needed.
+      // But -crf doesn't always work for mpeg4, usually it's -q:v.
+      // FFmpegService might need to handle this mapping.
     }
 
     return ValidationResult(isValid: true);

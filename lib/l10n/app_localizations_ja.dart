@@ -110,7 +110,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get paramVideoCodecDetails =>
-      '- **H.264 (libx264):** 最も一般的で、ほぼすべてのデバイスと互換性があります。速度と品質のバランスが良いです。\n- **VP9 (libvpx-vp9):** Googleのオープンソースコーデックで、Web/YouTubeでよく使用されます。H.264よりも圧縮率は高いですが、エンコードは遅いです。';
+      '- **H.264 (libx264):** 最も一般的で、ほぼすべてのデバイスと互換性があります。速度と品質のバランスが良いです。\n- **H.265 (libx265):** H.264よりも高い圧縮効率（ファイルサイズが約50％小さい）。エンコード/デコードにはより高い処理能力が必要です。\n- **VP9 (libvpx-vp9):** Googleのオープンソースコーデックで、Web/YouTubeでよく使用されます。H.264よりも圧縮率は高いですが、エンコードは遅いです。\n- **AV1 (libaom-av1):** 次世代コーデック。最高の圧縮率、ロイヤリティフリーですが、ハードウェアアクセラレーションがないとエンコードが非常に遅いです。\n- **MPEG-4 (libxvid):** 古い規格。古いデバイスとの互換性は非常に高いですが、圧縮効率は低いです。';
 
   @override
   String get paramCrf => '2. Constant Rate Factor (CRF)';
