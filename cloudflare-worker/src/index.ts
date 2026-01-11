@@ -10,10 +10,22 @@ interface Env {
   DATABASE_URL: string;
   API_KEY: string;
   IPINFO_TOKEN?: string;
+  DB_CA_CERT?: string;
 }
 
 // Create Hono app
 const app = new Hono<{ Bindings: Env }>();
+
+// Use Cloudflare's bindings directly in development if needed
+app.use('*', async (c, next) => {
+  // Sometimes in local dev, bindings might be on the global object or accessed differently depending on wrangler version
+  // but usually c.env is correct.
+  console.log('Checking env vars availability:', {
+    hasDbUrl: !!c.env.DATABASE_URL,
+    apiKeyExists: !!c.env.API_KEY
+  });
+  await next();
+});
 
 // CORS middleware - allow all origins for analytics
 app.use('/*', cors({
@@ -47,7 +59,15 @@ app.use('/api/*', async (c, next) => {
 // Health check endpoint (no auth required)
 app.get('/health', async (c) => {
   try {
-    const db = new DatabaseService({ DATABASE_URL: c.env.DATABASE_URL });
+    // Environment variable check for debugging
+    if (!c.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL environment variable is not set');
+    }
+
+    const db = new DatabaseService({ 
+      DATABASE_URL: c.env.DATABASE_URL,
+      DB_CA_CERT: c.env.DB_CA_CERT 
+    });
     const dbHealthy = await db.healthCheck();
 
     return c.json({
@@ -71,7 +91,10 @@ app.get('/health', async (c) => {
 
 // Session endpoint - POST /api/session
 app.post('/api/session', async (c) => {
-  const db = new DatabaseService({ DATABASE_URL: c.env.DATABASE_URL });
+  const db = new DatabaseService({ 
+    DATABASE_URL: c.env.DATABASE_URL,
+    DB_CA_CERT: c.env.DB_CA_CERT 
+  });
   return handleSession(c, {
     db,
     ipinfoToken: c.env.IPINFO_TOKEN,
@@ -80,13 +103,19 @@ app.post('/api/session', async (c) => {
 
 // Events endpoint - POST /api/events
 app.post('/api/events', async (c) => {
-  const db = new DatabaseService({ DATABASE_URL: c.env.DATABASE_URL });
+  const db = new DatabaseService({ 
+    DATABASE_URL: c.env.DATABASE_URL,
+    DB_CA_CERT: c.env.DB_CA_CERT 
+  });
   return handleEvents(c, { db });
 });
 
 // Errors endpoint - POST /api/errors
 app.post('/api/errors', async (c) => {
-  const db = new DatabaseService({ DATABASE_URL: c.env.DATABASE_URL });
+  const db = new DatabaseService({ 
+    DATABASE_URL: c.env.DATABASE_URL,
+    DB_CA_CERT: c.env.DB_CA_CERT 
+  });
   return handleError(c, { db });
 });
 
