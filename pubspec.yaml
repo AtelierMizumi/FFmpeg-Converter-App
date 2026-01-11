@@ -1,4 +1,4 @@
-name: ffmpeg_converter_app
+name: flutter_test_application
 description: "A new Flutter project."
 publish_to: 'none'
 
@@ -25,7 +25,7 @@ dependencies:
   media_kit: ^1.2.6
   media_kit_video: ^2.0.1
   media_kit_libs_video: ^1.0.7
-  ffmpeg_kit_flutter_full_gpl: ^6.0.3
+  # ffmpeg_kit_flutter_full_gpl: ^6.0.3  # Disabled - package discontinued and not available
 
 dev_dependencies:
   flutter_test:

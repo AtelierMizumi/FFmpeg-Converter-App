@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:ffmpeg_converter_app/l10n/app_localizations.dart';
+import 'package:flutter_test_application/l10n/app_localizations.dart';
 
 class GuideTab extends StatelessWidget {
   const GuideTab({super.key});
