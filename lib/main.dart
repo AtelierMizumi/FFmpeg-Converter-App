@@ -6,12 +6,19 @@ import 'package:flutter_test_application/l10n/app_localizations.dart';
 import 'ui/tabs/converter_tab.dart';
 import 'ui/tabs/guide_tab.dart';
 import 'ui/tabs/credits_tab.dart';
+import 'services/analytics_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize MediaKit
   if (!kIsWeb) {
     MediaKit.ensureInitialized();
   }
+
+  // Initialize Analytics
+  await AnalyticsService.instance.initialize();
+
   runApp(const FFmpegConverterApp());
 }
 
@@ -25,10 +32,40 @@ class FFmpegConverterApp extends StatefulWidget {
       context.findAncestorStateOfType<_FFmpegConverterAppState>();
 }
 
-class _FFmpegConverterAppState extends State<FFmpegConverterApp> {
+class _FFmpegConverterAppState extends State<FFmpegConverterApp>
+    with WidgetsBindingObserver {
   Locale _locale = const Locale(
     'vi',
   ); // Default VI as requested by context cues (Vietnamese user)
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // Track app lifecycle changes
+    switch (state) {
+      case AppLifecycleState.resumed:
+        AnalyticsService.instance.onAppResumed();
+        break;
+      case AppLifecycleState.paused:
+        AnalyticsService.instance.onAppPaused();
+        break;
+      default:
+        break;
+    }
+  }
 
   void setLocale(Locale value) {
     setState(() {

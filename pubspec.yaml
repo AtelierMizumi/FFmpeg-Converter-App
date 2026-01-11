@@ -26,6 +26,15 @@ dependencies:
   media_kit_video: ^2.0.1
   media_kit_libs_video: ^1.0.7
   # ffmpeg_kit_flutter_full_gpl: ^6.0.3  # Disabled - package discontinued and not available
+  
+  # Analytics dependencies
+  device_info_plus: ^10.1.2
+  http: ^1.2.2
+  uuid: ^4.5.1
+  shared_preferences: ^2.3.3
+  connectivity_plus: ^6.1.1
+  crypto: ^3.0.3
+  package_info_plus: ^8.1.2
 
 dev_dependencies:
   flutter_test:

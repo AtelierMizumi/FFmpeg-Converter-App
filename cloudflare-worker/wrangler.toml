@@ -1,0 +1,26 @@
+name = "flutter-analytics-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-10"
+
+# Cloudflare Workers configuration
+# This worker will be deployed to: https://flutter-analytics-api.YOUR_SUBDOMAIN.workers.dev
+
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+# ============================================================================
+# SECRETS (Configure with: wrangler secret put SECRET_NAME)
+# ============================================================================
+# Required secrets:
+# - DATABASE_URL: PostgreSQL connection string from Aiven
+#   Format: postgresql://analytics_worker:PASSWORD@host:port/db?sslmode=require
+#   Set with: wrangler secret put DATABASE_URL
+#
+# - API_KEY: Authentication key for Flutter app
+#   Value: ak_472e76bfc9f5211d6570b3b3746f6603
+#   Set with: wrangler secret put API_KEY
+#
+# - IPINFO_TOKEN: Optional token for IP geolocation enrichment
+#   Get free token at: https://ipinfo.io/signup (50k req/month free)
+#   Set with: wrangler secret put IPINFO_TOKEN
+#   (If not set, will use Cloudflare's built-in geo headers)
