@@ -173,9 +173,6 @@ class FFmpegServiceImpl implements FFmpegService {
               }
             }
           }
-        }
-      }
-    });
 
           // Parse time=00:00:02.50
           if (totalDuration != null) {

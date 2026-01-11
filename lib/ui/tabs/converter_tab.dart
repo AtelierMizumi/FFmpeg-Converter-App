@@ -7,7 +7,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:gap/gap.dart';
 import 'package:open_file/open_file.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_test_application/l10n/app_localizations.dart';
+import 'package:ffmpeg_converter_app/l10n/app_localizations.dart';
 import '../../services/ffmpeg_service.dart';
 import '../../services/video_validator.dart';
 import '../widgets/video_comparison.dart';
@@ -660,7 +660,7 @@ class _ConverterTabState extends State<ConverterTab>
               child: TextButton.icon(
                 onPressed: () => launchUrl(
                   Uri.parse(
-                    'https://github.com/AtelierMizumi/flutter_test_application/releases',
+                    'https://github.com/AtelierMizumi/FFmpeg-Converter-App/releases',
                   ),
                 ),
                 icon: const Icon(Icons.system_update),

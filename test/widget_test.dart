@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_test_application/main.dart';
-import 'package:flutter_test_application/services/video_validator.dart';
+import 'package:ffmpeg_converter_app/main.dart';
+import 'package:ffmpeg_converter_app/services/video_validator.dart';
 import 'package:cross_file/cross_file.dart';
 import 'dart:typed_data';
 
@@ -31,9 +31,21 @@ void main() {
     test('Should accept valid video formats', () async {
       final validFormats = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
       for (final format in validFormats) {
-        final file = XFile.fromData(Uint8List(100), name: 'test.$format');
+        // Use a non-empty path string so video validator can detect extension properly
+        // if it relies on path logic fallback
+        final file = XFile.fromData(
+          Uint8List(100),
+          name: 'test.$format',
+          length: 100,
+          path: '/mock/path/to/test.$format',
+        );
+
         final result = await VideoValidator.validateInputFile(file);
-        expect(result.isValid, true, reason: 'Should accept .$format');
+        expect(
+          result.isValid,
+          true,
+          reason: 'Should accept .$format but got error: ${result.error}',
+        );
       }
     });
 
