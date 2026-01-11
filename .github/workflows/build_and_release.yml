@@ -181,6 +181,13 @@ jobs:
       - name: Build Web
         run: flutter build web --release --base-href /FFmpeg-Converter-App/
 
+      - name: Fix Source Map 404 Errors
+        run: |
+          # Create empty source map files to prevent 404 errors in browser console
+          echo '{"version":3, "file": "flutter.js", "sources": [], "names": [], "mappings": ""}' > build/web/flutter.js.map
+          echo '{"version":3, "file": "flutter_bootstrap.js", "sources": [], "names": [], "mappings": ""}' > build/web/flutter_bootstrap.js.map
+          echo "✅ Created dummy source maps"
+
       - name: Create .nojekyll
         run: touch build/web/.nojekyll
 
