@@ -6,7 +6,7 @@ import FlutterMacOS
 import Foundation
 
 import desktop_drop
-import ffmpeg_kit_flutter
+import ffmpeg_kit_flutter_full_gpl
 import file_picker
 import media_kit_libs_macos_video
 import media_kit_video

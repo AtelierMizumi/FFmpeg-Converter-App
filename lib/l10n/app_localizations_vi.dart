@@ -112,7 +112,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get paramVideoCodecDetails =>
-      '- **H.264 (libx264):** Phổ biến nhất, tương thích mọi thiết bị. Cân bằng tốt giữa tốc độ và chất lượng.\n- **VP9 (libvpx-vp9):** Codec mã nguồn mở của Google, thường dùng cho Web/YouTube. Nén tốt hơn H.264 nhưng encode chậm hơn.';
+      '- **H.264 (libx264):** Phổ biến nhất, tương thích mọi thiết bị. Cân bằng tốt giữa tốc độ và chất lượng.\n- **H.265 (libx265):** Hiệu suất nén cao hơn H.264 (file nhỏ hơn khoảng 50%). Yêu cầu cấu hình mạnh hơn để encode/decode.\n- **VP9 (libvpx-vp9):** Codec mã nguồn mở của Google, thường dùng cho Web/YouTube. Nén tốt hơn H.264 nhưng encode chậm hơn.\n- **AV1 (libaom-av1):** Codec thế hệ mới. Nén tốt nhất, miễn phí bản quyền, nhưng encode rất chậm nếu không có phần cứng hỗ trợ.\n- **MPEG-4 (libxvid):** Chuẩn cũ. Tương thích rất cao với thiết bị đời cũ, nhưng nén kém hiệu quả hơn.';
 
   @override
   String get paramCrf => '2. Constant Rate Factor (CRF)';

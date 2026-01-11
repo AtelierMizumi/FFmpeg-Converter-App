@@ -147,10 +147,43 @@ class _ConverterTabState extends State<ConverterTab>
       // Video Codec
       args.addAll(['-c:v', _videoCodec]);
 
-      // Preset & CRF (Only specific to libx264/libvpx, generally safe to pass)
-      if (_videoCodec != 'copy') {
+      // Codec-specific flags (Preset & CRF/Quality)
+      if (_videoCodec == 'libx264' || _videoCodec == 'libx265') {
         args.addAll(['-preset', _preset]);
-        // Note: VP9 uses -crf too but values differ slightly. simple logic for now.
+        args.addAll(['-crf', _crf.toInt().toString()]);
+      } else if (_videoCodec == 'libvpx-vp9') {
+        // VP9: Map preset to deadline/cpu-used
+        if (_preset.contains('fast')) {
+          args.addAll(['-deadline', 'realtime', '-cpu-used', '4']);
+        } else if (_preset.contains('slow')) {
+          args.addAll(['-deadline', 'best', '-cpu-used', '0']);
+        } else {
+          args.addAll(['-deadline', 'good', '-cpu-used', '2']);
+        }
+        args.addAll(['-crf', _crf.toInt().toString()]);
+      } else if (_videoCodec == 'libaom-av1') {
+        // AV1: Map preset to cpu-used (0-8, 8=fastest)
+        int cpuUsed = 4;
+        if (_preset == 'ultrafast') {
+          cpuUsed = 8;
+        } else if (_preset == 'fast') {
+          cpuUsed = 6;
+        } else if (_preset == 'medium') {
+          cpuUsed = 4;
+        } else if (_preset == 'slow') {
+          cpuUsed = 2;
+        } else if (_preset == 'veryslow') {
+          cpuUsed = 0;
+        }
+        args.addAll(['-cpu-used', cpuUsed.toString()]);
+        args.addAll(['-crf', _crf.toInt().toString()]);
+      } else if (_videoCodec == 'libxvid') {
+        // MPEG-4: Map CRF (0-51) to qscale (1-31)
+        int qscale = 1 + ((_crf / 51) * 30).round();
+        args.addAll(['-q:v', qscale.toString()]);
+      } else if (_videoCodec != 'copy') {
+        // Fallback for unknown codecs if added later
+        args.addAll(['-preset', _preset]);
         args.addAll(['-crf', _crf.toInt().toString()]);
       }
 
@@ -605,7 +638,10 @@ class _ConverterTabState extends State<ConverterTab>
             const Gap(16),
             _buildDropdown(l10n.videoCodec, _videoCodec, [
               'libx264',
+              'libx265',
               'libvpx-vp9',
+              'libaom-av1',
+              'libxvid',
               'copy',
             ], (v) => setState(() => _videoCodec = v!)),
             const Gap(16),

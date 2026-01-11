@@ -30,7 +30,7 @@
   "sectionSettings": "Technical Settings",
   "paramVideoCodec": "1. Video Codec",
   "paramVideoCodecDesc": "The video encoder. Determines how image data is compressed.",
-  "paramVideoCodecDetails": "- **H.264 (libx264):** Most popular, compatible with almost all devices. Good balance of speed and quality.\n- **VP9 (libvpx-vp9):** Google's open source codec, often used for Web/YouTube. Better compression than H.264 but slower encoding.",
+  "paramVideoCodecDetails": "- **H.264 (libx264):** Most popular, compatible with almost all devices. Good balance of speed and quality.\n- **H.265 (libx265):** Higher compression efficiency than H.264 (about 50% smaller files). Requires more processing power to encode/decode.\n- **VP9 (libvpx-vp9):** Google's open source codec, often used for Web/YouTube. Better compression than H.264 but slower encoding.\n- **AV1 (libaom-av1):** Next-gen codec. Best compression, royalty-free, but very slow encoding without hardware acceleration.\n- **MPEG-4 (libxvid):** Older standard. Very high compatibility with legacy devices, but less efficient compression.",
   "paramCrf": "2. Constant Rate Factor (CRF)",
   "paramCrfDesc": "The metric determining output video quality.",
   "paramCrfDetails": "- Range: 0-51.\n- **0:** Lossless (No compression, huge file size).\n- **23:** Default (Balanced).\n- **18:** High Quality (Visually lossless).\n- **28:** Lower Quality (Smaller file size).\n *Rule: LOWER value = HIGHER quality = LARGER size.*",
