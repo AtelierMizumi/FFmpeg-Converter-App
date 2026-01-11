@@ -11,7 +11,13 @@ class FFmpegServiceImpl implements FFmpegService {
   @override
   Future<void> initialize() async {
     if (_isLoaded) return;
-    _ffmpeg = createFFmpeg(CreateFFmpegParam(log: true));
+    // Explicitly set corePath to ensure version compatibility and reliable loading
+    _ffmpeg = createFFmpeg(
+      CreateFFmpegParam(
+        log: true,
+        corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',
+      ),
+    );
     await _ffmpeg.load();
     _isLoaded = true;
     debugPrint('FFmpeg Web Initialized');
