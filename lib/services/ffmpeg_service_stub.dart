@@ -22,4 +22,11 @@ class FFmpegServiceImpl implements FFmpegService {
       'FFmpegService is not implemented for this platform',
     );
   }
+
+  @override
+  Future<void> cancel() {
+    throw UnimplementedError(
+      'FFmpegService is not implemented for this platform',
+    );
+  }
 }

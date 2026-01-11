@@ -21,7 +21,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build libgtk-3-dev libmpv-dev mpv
+          sudo apt-get install -y ninja-build libgtk-3-dev libmpv-dev mpv patchelf
 
       - name: Enable Linux Desktop
         run: flutter config --enable-linux-desktop
@@ -32,14 +32,52 @@ jobs:
       - name: Build Linux app
         run: flutter build linux --release --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }}
 
-      - name: Compress Linux Build
-        run: tar -czvf ffmpeg_converter_app-linux.tar.gz -C build/linux/x64/release/bundle .
+      - name: Create portable Linux package
+        run: |
+          cd build/linux/x64/release/bundle
+          
+          # Create a launch script
+          cat > ffmpeg-converter << 'EOF'
+          #!/bin/bash
+          SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+          cd "$SCRIPT_DIR"
+          export LD_LIBRARY_PATH="$SCRIPT_DIR/lib:$LD_LIBRARY_PATH"
+          exec "$SCRIPT_DIR/flutter_test_application" "$@"
+          EOF
+          
+          chmod +x ffmpeg-converter
+          
+          cd ..
+          tar -czf ../../../../FFmpeg-Converter-Linux-x86_64-Portable.tar.gz -C bundle .
+          
+      - name: Create README for Linux
+        run: |
+          cat > LINUX_README.txt << 'EOF'
+          FFmpeg Converter - Linux Portable Version
+          ==========================================
+          
+          Installation:
+          1. Extract the tar.gz file: tar -xzf FFmpeg-Converter-Linux-x86_64-Portable.tar.gz
+          2. Run: ./ffmpeg-converter
+          
+          Or double-click 'ffmpeg-converter' in your file manager.
+          
+          Requirements:
+          - GTK3
+          - libmpv
+          
+          Install on Ubuntu/Debian: sudo apt-get install libgtk-3-0 libmpv1
+          Install on Fedora: sudo dnf install gtk3 mpv-libs
+          Install on Arch: sudo pacman -S gtk3 mpv
+          EOF
 
-      - name: Upload Linux Artifact
+      - name: Upload Linux Build
         uses: actions/upload-artifact@v4
         with:
           name: linux-build
-          path: ffmpeg_converter_app-linux.tar.gz
+          path: |
+            FFmpeg-Converter-Linux-x86_64-Portable.tar.gz
+            LINUX_README.txt
 
   build-windows:
     name: Build Windows
@@ -62,14 +100,66 @@ jobs:
       - name: Build Windows app
         run: flutter build windows --release --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }}
 
-      - name: Compress Windows Build
-        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ffmpeg_converter_app-windows.zip
+      - name: Rename executable for clarity
+        run: |
+          cd build\windows\x64\runner\Release
+          
+          # Rename the main executable to a user-friendly name
+          if (Test-Path "flutter_test_application.exe") {
+            Rename-Item -Path "flutter_test_application.exe" -NewName "FFmpeg-Converter.exe"
+            Write-Host "✅ Renamed to FFmpeg-Converter.exe"
+          }
+          
+          # Create README
+          $readme = @'
+          ╔══════════════════════════════════════════════╗
+          ║   FFmpeg Converter - Windows Portable       ║
+          ╚══════════════════════════════════════════════╝
 
-      - name: Upload Windows Artifact
+          🚀 CÁCH CHẠY:
+          
+          Double-click vào: FFmpeg-Converter.exe
+          
+          Đơn giản vậy thôi!
+
+          ─────────────────────────────────────────────
+
+          📌 TẠO SHORTCUT:
+          
+          1. Chuột phải vào FFmpeg-Converter.exe
+          2. Chọn "Send to" → "Desktop (create shortcut)"
+          3. Giờ bạn có thể chạy từ Desktop!
+
+          ─────────────────────────────────────────────
+
+          ℹ️  LƯU Ý:
+          
+          - Giữ tất cả files trong cùng thư mục này
+          - Không xóa các file .dll và thư mục data/
+          - Có thể copy toàn bộ thư mục sang máy khác
+
+          ─────────────────────────────────────────────
+
+          📦 Portable Version - No Installation Required
+          '@
+          
+          Set-Content -Path "README.txt" -Value $readme -Encoding UTF8
+          
+          Write-Host "✅ Created README.txt"
+        shell: pwsh
+
+      - name: Compress Windows Build
+        run: |
+          # Compress from inside the Release folder so files are at root when extracted
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath FFmpeg-Converter-Windows-Portable.zip -Force
+          Write-Host "✅ Created portable ZIP package"
+        shell: pwsh
+
+      - name: Upload Windows Portable
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
-          path: ffmpeg_converter_app-windows.zip
+          path: FFmpeg-Converter-Windows-Portable.zip
 
   build-web:
     name: Build Web & Deploy
@@ -156,18 +246,140 @@ jobs:
         with:
           name: android-build
 
+      - name: Rename APK for clarity
+        run: mv app-release.apk FFmpeg-Converter-Android.apk
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
           name: Release v1.0.${{ github.run_number }}
           body: |
-            Automated release triggered by ${{ github.actor }}.
-            Version: 1.0.${{ github.run_number }}
+            ## 🎬 FFmpeg Converter v1.0.${{ github.run_number }}
+            
+            **Tải về và chạy ngay - Không cần cài đặt!**
+            
+            ### 📥 Tải về cho hệ điều hành của bạn:
+            
+            | Platform | File | Kích thước | Cách dùng |
+            |----------|------|------------|-----------|
+            | 🪟 **Windows** | `FFmpeg-Converter-Windows-Portable.zip` | ~150MB | Giải nén → Chạy **FFmpeg-Converter.exe** |
+            | 🐧 **Linux** | `FFmpeg-Converter-Linux-x86_64-Portable.tar.gz` | ~200MB | Giải nén → Chạy `./ffmpeg-converter` |
+            | 🤖 **Android** | `FFmpeg-Converter-Android.apk` | ~150MB | Cài đặt APK |
+            
+            ---
+            
+            ### 🪟 Windows - Siêu đơn giản!
+            
+            **Bước 1:** Tải file `FFmpeg-Converter-Windows-Portable.zip`
+            
+            **Bước 2:** Giải nén (chuột phải → Extract All)
+            
+            **Bước 3:** Mở thư mục vừa giải nén, bạn sẽ thấy:
+            ```
+            📁 FFmpeg-Converter/
+            ├── 📄 FFmpeg-Converter.exe  ← Double-click vào đây!
+            ├── 📄 README.txt
+            ├── 📄 các file .dll
+            └── 📁 data/
+            ```
+            
+            **Bước 4:** Double-click vào `FFmpeg-Converter.exe` → Xong!
+            
+            💡 **Tạo shortcut Desktop:**
+            - Chuột phải vào `FFmpeg-Converter.exe`
+            - Chọn `Send to` → `Desktop (create shortcut)`
+            - Giờ chạy từ Desktop luôn!
+            
+            ---
+            
+            ### 🐧 Linux - Dễ dàng không kém!
+            
+            ```bash
+            # Bước 1: Giải nén
+            tar -xzf FFmpeg-Converter-Linux-x86_64-Portable.tar.gz
+            cd FFmpeg-Converter/
+            
+            # Bước 2: Chạy!
+            ./ffmpeg-converter
+            ```
+            
+            **Cần cài dependencies (nếu chưa có):**
+            ```bash
+            # Ubuntu/Debian
+            sudo apt-get install libgtk-3-0 libmpv1
+            
+            # Fedora
+            sudo dnf install gtk3 mpv-libs
+            
+            # Arch Linux
+            sudo pacman -S gtk3 mpv
+            ```
+            
+            💡 **Tạo Desktop launcher:** Xem hướng dẫn trong `LINUX_README.txt`
+            
+            ---
+            
+            ### 🤖 Android
+            
+            ```
+            1. Tải file FFmpeg-Converter-Android.apk
+            2. Mở file APK để cài đặt
+            3. Cho phép "Install from unknown sources" nếu được hỏi
+            ```
+            
+            ⚠️ **Lưu ý quan trọng:** Phiên bản Android **KHÔNG hỗ trợ chuyển đổi video** do thư viện FFmpeg Kit đã bị discontinued. 
+            
+            👉 Để chuyển đổi video, vui lòng dùng:
+            - 🌐 **Web version** (khuyên dùng nhất): [GitHub Pages](https://yourusername.github.io/FFmpeg-Converter-App/)
+            - 🪟 Windows portable
+            - 🐧 Linux portable
+            
+            ---
+            
+            ### ✨ Tính năng:
+            
+            - ✅ Chuyển đổi video sang MP4, WebM, AVI, MKV, MOV...
+            - ✅ Điều chỉnh codec (H.264, H.265, VP9...)
+            - ✅ Thay đổi bitrate, độ phân giải
+            - ✅ Xem trước video trước/sau chuyển đổi
+            - ✅ Giao diện thân thiện, dễ dùng
+            - ✅ Đa ngôn ngữ: 🇬🇧 English | 🇻🇳 Tiếng Việt | 🇯🇵 日本語 | 🇩🇪 Deutsch
+            
+            ---
+            
+            ### 🌐 Dùng ngay trên Web - Không cần tải!
+            
+            Truy cập: **[https://yourusername.github.io/FFmpeg-Converter-App/](https://yourusername.github.io/FFmpeg-Converter-App/)**
+            
+            - ✅ Không cần cài đặt
+            - ✅ Chạy trên mọi hệ điều hành (Windows, Mac, Linux, Android, iOS)
+            - ✅ Tất cả xử lý diễn ra trên máy bạn (privacy-first)
+            
+            ---
+            
+            ### 📊 So sánh các phiên bản:
+            
+            | Tính năng | Windows | Linux | Android | Web |
+            |-----------|---------|-------|---------|-----|
+            | Chuyển đổi video | ✅ | ✅ | ❌ | ✅ |
+            | Portable/No install | ✅ | ✅ | ❌ | ✅ |
+            | Tốc độ | ⚡⚡⚡ | ⚡⚡⚡ | - | ⚡⚡ |
+            | Video preview | ✅ | ✅ | ✅ | ✅ |
+            
+            ---
+            
+            **🎉 Khuyến nghị:** 
+            - Desktop users: Tải Windows/Linux portable
+            - Dùng thử nhanh: Dùng Web version
+            - Mobile: Dùng Web version trên browser
+            
+            **Built with:** Flutter 💙 | **Build date:** ${{ github.event.head_commit.timestamp }}
           draft: false
           prerelease: false
           files: |
-            ffmpeg_converter_app-linux.tar.gz
-            ffmpeg_converter_app-windows.zip
+            FFmpeg-Converter-Linux-x86_64-Portable.tar.gz
+            LINUX_README.txt
+            FFmpeg-Converter-Windows-Portable.zip
+            FFmpeg-Converter-Android.apk
             app-release.apk
-            ffmpeg_converter_app-windows.zip
