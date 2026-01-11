@@ -1,4 +1,4 @@
-package com.example.flutter_test_application
+package com.example.ffmpeg_converter_app
 
 import io.flutter.embedding.android.FlutterActivity
 

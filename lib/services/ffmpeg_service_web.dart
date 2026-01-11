@@ -1,6 +1,9 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:ffmpeg_wasm/ffmpeg_wasm.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit_config.dart';
 import 'ffmpeg_service_interface.dart';
 
 class FFmpegServiceImpl implements FFmpegService {
@@ -18,7 +21,7 @@ class FFmpegServiceImpl implements FFmpegService {
 
     await _ffmpeg.load();
     _isLoaded = true;
-    print('FFmpeg Web Initialized');
+    debugPrint('FFmpeg Web Initialized');
   }
 
   @override
@@ -52,15 +55,15 @@ class FFmpegServiceImpl implements FFmpegService {
         'input_${DateTime.now().millisecondsSinceEpoch}.${input.name.split('.').last}';
     final outputName = outputFilename ?? 'output.$outputExtension';
 
-    print('Writing to MEMFS: $inputName');
+    debugPrint('Writing to MEMFS: $inputName');
     _ffmpeg.writeFile(inputName, inputData);
 
     final runArgs = ['-i', inputName, ...args, outputName];
-    print('Running FFmpeg (Web): ${runArgs.join(' ')}');
+    debugPrint('Running FFmpeg (Web): ${runArgs.join(' ')}');
 
     await _ffmpeg.run(runArgs);
 
-    print('Reading from MEMFS: $outputName');
+    debugPrint('Reading from MEMFS: $outputName');
     // readFile returns generic data, cast to Uint8List
     final outputData = _ffmpeg.readFile(outputName);
 
@@ -68,10 +71,12 @@ class FFmpegServiceImpl implements FFmpegService {
     _ffmpeg.unlink(inputName);
     // _ffmpeg.FS.unlink(outputName); // Don't unlink output yet? actually we copy it to XFile
 
-    if (outputData != null) {
-      return XFile.fromData(Uint8List.fromList(outputData), name: outputName);
-    } else {
-      throw Exception('FFmpeg Web: No output generated or file read failure');
-    }
+    return XFile.fromData(Uint8List.fromList(outputData!), name: outputName);
+  }
+
+  @override
+  Future<void> cancel() async {
+    _ffmpeg.exit();
+    _isLoaded = false;
   }
 }

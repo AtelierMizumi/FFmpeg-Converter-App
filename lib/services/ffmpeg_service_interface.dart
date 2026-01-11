@@ -12,4 +12,5 @@ abstract class FFmpegService {
     String? outputFilename,
     ProgressCallback? onProgress,
   });
+  Future<void> cancel();
 }

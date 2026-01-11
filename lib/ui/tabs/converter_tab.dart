@@ -9,6 +9,7 @@ import 'package:open_file/open_file.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_test_application/l10n/app_localizations.dart';
 import '../../services/ffmpeg_service.dart';
+import '../../services/video_validator.dart';
 import '../widgets/video_comparison.dart';
 
 class ConverterTab extends StatefulWidget {
@@ -30,6 +31,7 @@ class _ConverterTabState extends State<ConverterTab>
   String _statusMessage = 'Ready';
   bool _isDragging = false;
   bool _initialized = false;
+  bool _isCancelling = false;
 
   // Expanded Settings
   String _videoCodec = 'libx264';
@@ -73,14 +75,30 @@ class _ConverterTabState extends State<ConverterTab>
     );
     if (result != null && result.files.isNotEmpty) {
       final file = result.files.first;
-      setState(() {
-        if (file.path != null) {
-          _selectedFile = XFile(file.path!);
-        } else if (file.bytes != null) {
-          _selectedFile = XFile.fromData(file.bytes!, name: file.name);
+      XFile? selectedXFile;
+      if (file.path != null) {
+        selectedXFile = XFile(file.path!);
+      } else if (file.bytes != null) {
+        selectedXFile = XFile.fromData(file.bytes!, name: file.name);
+      }
+
+      if (selectedXFile != null) {
+        final validation = await VideoValidator.validateInputFile(
+          selectedXFile,
+        );
+        if (!validation.isValid) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(validation.error!)));
+          return;
         }
-        _outputFile = null;
-      });
+
+        setState(() {
+          _selectedFile = selectedXFile;
+          _outputFile = null;
+        });
+      }
     }
   }
 
@@ -105,7 +123,10 @@ class _ConverterTabState extends State<ConverterTab>
 
     // Require output directory on Desktop for safety (as requested: prevent memory overflow)
     // On Web, we can't really enforce this in the same way, but we can warn.
-    if (!kIsWeb && _outputDirectory == null) {
+    // On Mobile, we use temp directory and user saves manually later.
+    final isDesktop =
+        !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+    if (isDesktop && _outputDirectory == null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.folderExportRequired)));
@@ -117,6 +138,7 @@ class _ConverterTabState extends State<ConverterTab>
       _progress = 0.0;
       _statusMessage = l10n.processing;
       _outputFile = null;
+      _isCancelling = false;
     });
 
     try {
@@ -200,6 +222,19 @@ class _ConverterTabState extends State<ConverterTab>
     }
   }
 
+  Future<void> _cancelConversion() async {
+    setState(() {
+      _isCancelling = true;
+      _statusMessage = 'Cancelling...';
+    });
+    await _ffmpegService.cancel();
+    setState(() {
+      _isProcessing = false;
+      _statusMessage = 'Conversion cancelled';
+      _progress = 0.0;
+    });
+  }
+
   void _showComparison() {
     final l10n = AppLocalizations.of(context)!;
     if (_selectedFile == null || _outputFile == null) return;
@@ -262,261 +297,42 @@ class _ConverterTabState extends State<ConverterTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final l10n = AppLocalizations.of(context)!;
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 900),
-        padding: const EdgeInsets.all(24.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Left Panel: Input/Output
-            Expanded(
-              flex: 4,
-              child: Column(
-                children: [
-                  _buildDropZone(context),
-                  const Gap(16),
-                  if (!kIsWeb) ...[
-                    InkWell(
-                      onTap: _pickOutputDirectory,
-                      borderRadius: BorderRadius.circular(8),
-                      child: InputDecorator(
-                        decoration: InputDecoration(
-                          labelText: l10n.pickOutputFolder,
-                          border: const OutlineInputBorder(),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.folder,
-                              color: Theme.of(context).primaryColor,
-                            ),
-                            const Gap(8),
-                            Expanded(
-                              child: Text(
-                                _outputDirectory ?? l10n.notSelected,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const Icon(Icons.arrow_drop_down),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const Gap(16),
-                    TextField(
-                      controller: _filenameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Output Filename (Optional)',
-                        border: OutlineInputBorder(),
-                        helperText: 'Leave empty for auto-generated name',
-                      ),
-                    ),
-                    const Gap(24),
-                  ],
+    // Determine platform once preferably
+    final isDesktop =
+        !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
-                  if (_isProcessing)
-                    Column(
-                      children: [
-                        LinearProgressIndicator(value: _progress),
-                        const Gap(8),
-                        Text('${(_progress * 100).toInt()}%'),
-                        const Gap(16),
-                        Text(l10n.processing),
-                      ],
-                    )
-                  else
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        FilledButton.icon(
-                          onPressed: _selectedFile != null
-                              ? _processVideo
-                              : null,
-                          icon: const Icon(Icons.play_arrow),
-                          label: Text(l10n.startConversion),
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                        ),
-                        const Gap(16),
-                        if (_outputFile != null) ...[
-                          if (kIsWeb)
-                            FilledButton.icon(
-                              onPressed: _saveOutput,
-                              icon: const Icon(Icons.download),
-                              label: Text(l10n.saveOutput),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                              ),
-                            )
-                          else ...[
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: () =>
-                                        OpenFile.open(_outputFile!.path),
-                                    icon: const Icon(Icons.open_in_new),
-                                    label: const Text('Open Video'),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const Gap(8),
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: () {
-                                      final path = _outputFile!.path;
-                                      final dir = File(path).parent.path;
-                                      launchUrl(Uri.directory(dir));
-                                    },
-                                    icon: const Icon(Icons.folder_open),
-                                    label: const Text('Open Folder'),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                          const Gap(8),
-                          OutlinedButton.icon(
-                            onPressed: _showComparison,
-                            icon: const Icon(Icons.compare_arrows),
-                            label: Text(l10n.compareVideo),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  const Gap(16),
-                  Text(
-                    _statusMessage,
-                    style: TextStyle(
-                      color: _statusMessage.startsWith('Error')
-                          ? Colors.red
-                          : Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Gap(32),
-            // Right Panel: Settings
-            Expanded(
-              flex: 5,
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: ListView(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 800;
+
+        return Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 900),
+            padding: const EdgeInsets.all(24.0),
+            child: isWide
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        l10n.settingsTitle,
-                        style: Theme.of(context).textTheme.titleLarge,
+                      Expanded(
+                        flex: 4,
+                        child: _buildLeftPanel(context, isDesktop),
                       ),
-                      const Gap(20),
-
-                      _buildDropdown(
-                        l10n.containerFormat,
-                        _container,
-                        _containers,
-                        (v) => setState(() => _container = v!),
-                      ),
-                      const Gap(16),
-                      _buildDropdown(
-                        l10n.videoCodec,
-                        _videoCodec,
-                        ['libx264', 'libvpx-vp9', 'copy'],
-                        (v) => setState(() => _videoCodec = v!),
-                      ),
-                      const Gap(16),
-                      _buildDropdown(
-                        l10n.resolution,
-                        _resolution,
-                        _resolutions,
-                        (v) => setState(() => _resolution = v!),
-                      ),
-                      const Gap(16),
-                      _buildDropdown(
-                        l10n.audioSettings,
-                        _audioSetting,
-                        _audioOptions,
-                        (v) => setState(() => _audioSetting = v!),
-                      ),
-
-                      const Gap(24),
-                      const Divider(),
-                      const Gap(16),
-
-                      Text(
-                        l10n.qualityCrf(_crf.toInt()),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Slider(
-                        value: _crf,
-                        min: 0,
-                        max: 51,
-                        divisions: 51,
-                        label: _crf.round().toString(),
-                        onChanged: (v) => setState(() => _crf = v),
-                      ),
-                      Text(
-                        l10n.lowerBetter,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                      ),
-
-                      const Gap(16),
-                      _buildDropdown(l10n.presetSpeed, _preset, [
-                        'ultrafast',
-                        'fast',
-                        'medium',
-                        'slow',
-                        'veryslow',
-                      ], (v) => setState(() => _preset = v!)),
-
                       const Gap(32),
-                      const Divider(),
-                      const Gap(8),
-                      Center(
-                        child: TextButton.icon(
-                          onPressed: () => launchUrl(
-                            Uri.parse(
-                              'https://github.com/AtelierMizumi/flutter_test_application/releases',
-                            ),
-                          ),
-                          icon: const Icon(Icons.system_update),
-                          label: const Text('Download Desktop Version'),
-                        ),
-                      ),
+                      Expanded(flex: 5, child: _buildRightPanel(context)),
                     ],
+                  )
+                : SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _buildLeftPanel(context, isDesktop),
+                        const Gap(32),
+                        _buildRightPanel(context),
+                      ],
+                    ),
                   ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -531,7 +347,7 @@ class _ConverterTabState extends State<ConverterTab>
         labelText: label,
         border: const OutlineInputBorder(),
       ),
-      value: value,
+      initialValue: value,
       items: items
           .map((e) => DropdownMenuItem(value: e, child: Text(e)))
           .toList(),
@@ -544,10 +360,19 @@ class _ConverterTabState extends State<ConverterTab>
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: DropTarget(
-        onDragDone: (detail) {
+        onDragDone: (detail) async {
           if (detail.files.isNotEmpty) {
+            final file = detail.files.first;
+            final validation = await VideoValidator.validateInputFile(file);
+            if (!validation.isValid) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(validation.error!)));
+              return;
+            }
             setState(() {
-              _selectedFile = detail.files.first;
+              _selectedFile = file;
               _outputFile = null;
             });
           }
@@ -561,10 +386,9 @@ class _ConverterTabState extends State<ConverterTab>
               color: _isDragging
                   ? Theme.of(
                       context,
-                    ).colorScheme.primaryContainer.withOpacity(0.3)
-                  : Theme.of(
-                      context,
-                    ).colorScheme.surfaceVariant.withOpacity(0.3),
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.3)
+                  : Theme.of(context).colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.3),
               border: Border.all(
                 color: Theme.of(context).colorScheme.outline,
                 width: 2,
@@ -591,6 +415,259 @@ class _ConverterTabState extends State<ConverterTab>
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLeftPanel(BuildContext context, bool isDesktop) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      children: [
+        _buildDropZone(context),
+        const Gap(16),
+        if (isDesktop) ...[
+          InkWell(
+            onTap: _pickOutputDirectory,
+            borderRadius: BorderRadius.circular(8),
+            child: InputDecorator(
+              decoration: InputDecoration(
+                labelText: l10n.pickOutputFolder,
+                border: const OutlineInputBorder(),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.folder, color: Theme.of(context).primaryColor),
+                  const Gap(8),
+                  Expanded(
+                    child: Text(
+                      _outputDirectory ?? l10n.notSelected,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Icon(Icons.arrow_drop_down),
+                ],
+              ),
+            ),
+          ),
+          const Gap(16),
+          TextField(
+            controller: _filenameController,
+            decoration: const InputDecoration(
+              labelText: 'Output Filename (Optional)',
+              border: OutlineInputBorder(),
+              helperText: 'Leave empty for auto-generated name',
+            ),
+          ),
+          const Gap(24),
+        ],
+
+        if (_isProcessing)
+          Column(
+            children: [
+              LinearProgressIndicator(value: _progress),
+              const Gap(8),
+              Text('${(_progress * 100).toInt()}%'),
+              const Gap(16),
+              Text(l10n.processing),
+            ],
+          )
+        else
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_isCancelling) ...[
+                OutlinedButton.icon(
+                  onPressed: _cancelConversion,
+                  icon: const Icon(Icons.close),
+                  label: const Text('Cancelling...'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ] else ...[
+                FilledButton.icon(
+                  onPressed: _selectedFile != null ? _processVideo : null,
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text(l10n.startConversion),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+                if (_isProcessing)
+                  OutlinedButton.icon(
+                    onPressed: _cancelConversion,
+                    icon: const Icon(Icons.cancel),
+                    label: const Text('Cancel'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+              ],
+              const Gap(16),
+              if (_outputFile != null) ...[
+                if (!isDesktop) // Web & Mobile
+                  FilledButton.icon(
+                    onPressed: _saveOutput,
+                    icon: const Icon(Icons.download),
+                    label: Text(l10n.saveOutput),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  )
+                else ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => OpenFile.open(_outputFile!.path),
+                          icon: const Icon(Icons.open_in_new),
+                          label: const Text('Open Video'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                        ),
+                      ),
+                      const Gap(8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            final path = _outputFile!.path;
+                            final dir = File(path).parent.path;
+                            launchUrl(Uri.directory(dir));
+                          },
+                          icon: const Icon(Icons.folder_open),
+                          label: const Text('Open Folder'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const Gap(8),
+                OutlinedButton.icon(
+                  onPressed: _showComparison,
+                  icon: const Icon(Icons.compare_arrows),
+                  label: Text(l10n.compareVideo),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        const Gap(16),
+        Text(
+          _statusMessage,
+          style: TextStyle(
+            color: _statusMessage.startsWith('Error')
+                ? Colors.red
+                : Colors.grey,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRightPanel(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: ListView(
+          shrinkWrap: true,
+          physics: const ClampingScrollPhysics(),
+          children: [
+            Text(
+              l10n.settingsTitle,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const Gap(20),
+
+            _buildDropdown(
+              l10n.containerFormat,
+              _container,
+              _containers,
+              (v) => setState(() => _container = v!),
+            ),
+            const Gap(16),
+            _buildDropdown(l10n.videoCodec, _videoCodec, [
+              'libx264',
+              'libvpx-vp9',
+              'copy',
+            ], (v) => setState(() => _videoCodec = v!)),
+            const Gap(16),
+            _buildDropdown(
+              l10n.resolution,
+              _resolution,
+              _resolutions,
+              (v) => setState(() => _resolution = v!),
+            ),
+            const Gap(16),
+            _buildDropdown(
+              l10n.audioSettings,
+              _audioSetting,
+              _audioOptions,
+              (v) => setState(() => _audioSetting = v!),
+            ),
+
+            const Gap(24),
+            const Divider(),
+            const Gap(16),
+
+            Text(
+              l10n.qualityCrf(_crf.toInt()),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Slider(
+              value: _crf,
+              min: 0,
+              max: 51,
+              divisions: 51,
+              label: _crf.round().toString(),
+              onChanged: (v) => setState(() => _crf = v),
+            ),
+            Text(
+              l10n.lowerBetter,
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+
+            const Gap(16),
+            _buildDropdown(l10n.presetSpeed, _preset, [
+              'ultrafast',
+              'fast',
+              'medium',
+              'slow',
+              'veryslow',
+            ], (v) => setState(() => _preset = v!)),
+
+            const Gap(32),
+            const Divider(),
+            const Gap(8),
+            Center(
+              child: TextButton.icon(
+                onPressed: () => launchUrl(
+                  Uri.parse(
+                    'https://github.com/AtelierMizumi/flutter_test_application/releases',
+                  ),
+                ),
+                icon: const Icon(Icons.system_update),
+                label: const Text('Download Desktop Version'),
+              ),
+            ),
+          ],
         ),
       ),
     );
