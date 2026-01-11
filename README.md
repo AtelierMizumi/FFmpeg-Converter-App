@@ -1,4 +1,4 @@
-# FFmpeg Converter App (flutter_test_application)
+# FFmpeg Converter App (ffmpeg_converter_app)
 
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20Web-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -31,8 +31,8 @@ The FFmpeg Converter App is a powerful desktop and web application designed to s
 #### Installation & Running
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/AtelierMizumi/flutter_test_application.git
-   cd flutter_test_application
+   git clone https://github.com/AtelierMizumi/FFmpeg-Converter-App.git
+   cd FFmpeg-Converter-App
    ```
 
 2. **Install dependencies:**
@@ -86,8 +86,8 @@ FFmpeg Converter App là ứng dụng đa nền tảng (Desktop/Web) mạnh mẽ
 #### Cài đặt & Chạy ứng dụng
 1. **Clone repository:**
    ```bash
-   git clone https://github.com/AtelierMizumi/flutter_test_application.git
-   cd flutter_test_application
+   git clone https://github.com/AtelierMizumi/FFmpeg-Converter-App.git
+   cd FFmpeg-Converter-App
    ```
 
 2. **Cài đặt thư viện:**
@@ -113,6 +113,7 @@ FFmpeg Converter App là ứng dụng đa nền tảng (Desktop/Web) mạnh mẽ
    - Điều chỉnh **Video Codec**, **Preset**, và **Chất lượng (CRF)**.
    - Chọn **Độ phân giải** output.
    - Cài đặt **Âm thanh** (Mặc định, Copy hoặc Tắt tiếng).
+   - Chọn **Ngôn ngữ**: Chuyển đổi giữa các ngôn ngữ hỗ trợ.
 4. **Chuyển đổi**: Nhấn nút bắt đầu chuyển đổi (Start/Convert).
 5. **Xem kết quả**: Sau khi hoàn tất, bạn có thể xem file kết quả hoặc so sánh trực tiếp với file gốc.
 
