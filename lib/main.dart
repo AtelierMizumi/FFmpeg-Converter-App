@@ -12,15 +12,15 @@ import 'services/analytics_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load .env file
+  // Load .env file if it exists (for local development)
+  // In CI/CD, secrets are passed via --dart-define, so .env is optional
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
-    // If .env is missing (e.g., in production/release if secrets are passed via build args),
-    // we might ignore or handle gracefully.
-    // However, dotenv is typically used for local dev.
+    // .env file not found or failed to load - this is okay in production builds
+    // Secrets will come from --dart-define flags instead
     if (kDebugMode) {
-      print('Warning: .env file not found or failed to load: $e');
+      print('Note: .env file not loaded (using dart-define or defaults): $e');
     }
   }
 
