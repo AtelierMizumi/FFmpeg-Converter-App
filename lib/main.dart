@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:flutter_test_application/l10n/app_localizations.dart';
+import 'ui/landing/landing_page.dart';
 import 'ui/tabs/converter_tab.dart';
 import 'ui/tabs/guide_tab.dart';
 import 'ui/tabs/credits_tab.dart';
@@ -24,7 +25,7 @@ void main() async {
     }
   }
 
-  // Initialize MediaKit
+  // Initialize MediaKit only if not on Web
   if (!kIsWeb) {
     MediaKit.ensureInitialized();
   }
@@ -119,7 +120,7 @@ class _FFmpegConverterAppState extends State<FFmpegConverterApp>
         Locale('ja'), // Japanese
         Locale('de'), // German
       ],
-      home: const MainScreen(),
+      home: kIsWeb ? const LandingPage() : const MainScreen(),
     );
   }
 }

@@ -71,14 +71,30 @@ class _ConverterTabState extends State<ConverterTab>
 
   Future<void> _pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.video,
+      type: FileType.any, // Changed from FileType.video to FileType.any
     );
     if (result != null && result.files.isNotEmpty) {
       final file = result.files.first;
       XFile? selectedXFile;
-      if (file.path != null) {
-        selectedXFile = XFile(file.path!);
-      } else if (file.bytes != null) {
+
+      // On Web, path is often null, so we must rely on bytes or the web-specific logic
+      if (kIsWeb) {
+        if (file.bytes != null) {
+          selectedXFile = XFile.fromData(file.bytes!, name: file.name);
+        } else {
+          // Fallback if bytes are missing (rare on web unless configured oddly)
+          // XFile.fromData is the standard way to handle web file picking in cross_file
+          // We'll try to use the readStream if available, but file_picker primarily gives bytes on web
+        }
+      } else {
+        // Desktop/Mobile
+        if (file.path != null) {
+          selectedXFile = XFile(file.path!);
+        }
+      }
+
+      // Safety fallback
+      if (selectedXFile == null && file.bytes != null) {
         selectedXFile = XFile.fromData(file.bytes!, name: file.name);
       }
 
