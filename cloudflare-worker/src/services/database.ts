@@ -1,32 +1,20 @@
-import postgres from 'postgres';
+import { neon } from '@neondatabase/serverless';
 import type { SessionData, EventData, ErrorData } from './validator';
 import type { GeolocationData } from './geolocation';
 
 export interface DatabaseConfig {
   DATABASE_URL: string;
-  DB_CA_CERT?: string;
 }
 
 export class DatabaseService {
-  private sql: postgres.Sql;
+  private sql: ReturnType<typeof neon>;
 
   constructor(config: DatabaseConfig) {
-    const sslOptions: any = {
-      rejectUnauthorized: false
-    };
-
-    if (config.DB_CA_CERT) {
-      sslOptions.ca = config.DB_CA_CERT;
-      sslOptions.rejectUnauthorized = true;
-    }
-
-    this.sql = postgres(config.DATABASE_URL, {
-      ssl: sslOptions,
-      // Postgres.js specific options for serverless
-      max: 1, // Max 1 connection for serverless env
-      idle_timeout: 3, // Close idle connection quickly
-      connect_timeout: 10,
-    });
+    console.log('Initializing Neon DatabaseService');
+    
+    // Neon's serverless driver is designed for edge environments
+    // It uses HTTP fetch under the hood, making it perfect for Cloudflare Workers
+    this.sql = neon(config.DATABASE_URL);
   }
 
   /**
@@ -35,24 +23,24 @@ export class DatabaseService {
   async insertSession(session: SessionData, geo: GeolocationData | null): Promise<void> {
     await this.sql`
       INSERT INTO app_sessions (
-        session_id, user_id_hash, timestamp,
-        device_model, device_brand, device_manufacturer, device_id_hash,
-        screen_width, screen_height, screen_density, supported_abis,
-        os_name, os_version, api_level, kernel_version,
-        app_version, app_build_number, package_name, is_first_launch, install_source, launch_count,
-        network_type, carrier_name, ip_address,
-        locale_language, locale_country, timezone, timezone_offset, currency,
-        startup_time_ms, memory_usage_mb, available_storage_gb,
-        geo_country, geo_region, geo_city, geo_latitude, geo_longitude
+        session_id, user_id, client_timestamp,
+        device_model, device_brand, device_manufacturer,
+        screen_width, screen_height, pixel_density, supported_abis,
+        os_name, os_version, api_level,
+        app_version, build_number, package_name, is_first_launch, install_source, lifetime_launch_count,
+        connection_type, ip_address,
+        system_language, locale_country_code, timezone, currency_code,
+        app_startup_ms, memory_usage_mb,
+        country_code, region, city, latitude, longitude
       ) VALUES (
         ${session.session_id}, ${session.user_id_hash}, ${session.timestamp},
-        ${session.device_model}, ${session.device_brand}, ${session.device_manufacturer}, ${session.device_id_hash},
+        ${session.device_model}, ${session.device_brand}, ${session.device_manufacturer},
         ${session.screen_width}, ${session.screen_height}, ${session.screen_density}, ${session.supported_abis},
-        ${session.os_name}, ${session.os_version}, ${session.api_level}, ${session.kernel_version},
+        ${session.os_name}, ${session.os_version}, ${session.api_level},
         ${session.app_version}, ${session.app_build_number}, ${session.package_name}, ${session.is_first_launch}, ${session.install_source}, ${session.launch_count},
-        ${session.network_type}, ${session.carrier_name}, ${session.ip_address},
-        ${session.locale_language}, ${session.locale_country}, ${session.timezone}, ${session.timezone_offset}, ${session.currency},
-        ${session.startup_time_ms}, ${session.memory_usage_mb}, ${session.available_storage_gb},
+        ${session.network_type}, ${session.ip_address},
+        ${session.locale_language}, ${session.locale_country}, ${session.timezone}, ${session.currency},
+        ${session.startup_time_ms}, ${session.memory_usage_mb},
         ${geo?.country ?? null}, ${geo?.region ?? null}, ${geo?.city ?? null}, ${geo?.latitude ?? null}, ${geo?.longitude ?? null}
       )
     `;
@@ -64,18 +52,19 @@ export class DatabaseService {
   async insertEvents(events: EventData[]): Promise<void> {
     if (events.length === 0) return;
 
-    // Use postgres.js internal mapper for arrays
-    const formattedEvents = events.map(event => ({
-        session_id: event.session_id,
-        event_type: event.event_type,
-        event_name: event.event_name,
-        timestamp: event.timestamp,
-        properties: event.properties ? JSON.stringify(event.properties) : null
-    }));
-
-    await this.sql`
-      INSERT INTO app_events ${this.sql(formattedEvents, 'session_id', 'event_type', 'event_name', 'timestamp', 'properties')}
-    `;
+    // Insert events one by one to match existing schema
+    for (const event of events) {
+      await this.sql`
+        INSERT INTO app_events (session_id, event_name, event_category, event_properties, client_timestamp)
+        VALUES (
+          ${event.session_id}, 
+          ${event.event_name}, 
+          ${event.event_type},
+          ${event.properties ? JSON.stringify(event.properties) : null},
+          ${event.timestamp}
+        )
+      `;
+    }
   }
 
   /**
@@ -84,7 +73,7 @@ export class DatabaseService {
   async insertError(error: ErrorData): Promise<void> {
     await this.sql`
       INSERT INTO app_errors (
-        session_id, timestamp, error_type, error_message, stack_trace, context
+        session_id, client_timestamp, error_type, error_message, stack_trace, error_context
       ) VALUES (
         ${error.session_id}, ${error.timestamp}, ${error.error_type}, ${error.error_message}, ${error.stack_trace}, ${error.context ? JSON.stringify(error.context) : null}
       )
@@ -96,13 +85,18 @@ export class DatabaseService {
    */
   async healthCheck(): Promise<boolean> {
     try {
-      await this.sql`SELECT 1`;
+      console.log('Starting health check...');
+      const result = await this.sql`SELECT 1 as health`;
+      console.log('Health check query result:', result);
       return true;
     } catch (error) {
       console.error('Database health check failed:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        cause: error instanceof Error ? error.cause : undefined
+      });
       return false;
     }
   }
 }
-
-

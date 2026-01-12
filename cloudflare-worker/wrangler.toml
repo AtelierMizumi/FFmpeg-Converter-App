@@ -13,12 +13,11 @@ vars = { ENVIRONMENT = "production" }
 # SECRETS (Configure with: wrangler secret put SECRET_NAME)
 # ============================================================================
 # Required secrets:
-# - DATABASE_URL: PostgreSQL connection string from Aiven
-#   Format: postgresql://analytics_worker:PASSWORD@host:port/db?sslmode=require
+# - DATABASE_URL: Neon PostgreSQL connection string
+#   Get from: https://console.neon.tech (use the pooled connection string)
 #   Set with: wrangler secret put DATABASE_URL
 #
 # - API_KEY: Authentication key for Flutter app
-#   Value: ak_472e76bfc9f5211d6570b3b3746f6603
 #   Set with: wrangler secret put API_KEY
 #
 # - IPINFO_TOKEN: Optional token for IP geolocation enrichment

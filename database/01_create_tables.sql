@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS app_sessions (
     device_brand VARCHAR(100),
     device_manufacturer VARCHAR(100),
     is_physical_device BOOLEAN,
-    supported_abis TEXT[],
+    supported_abis TEXT [],
     os_name VARCHAR(50) NOT NULL,
     os_version VARCHAR(50),
     api_level INTEGER,
