@@ -10,7 +10,6 @@ interface Env {
   DATABASE_URL: string;
   API_KEY: string;
   IPINFO_TOKEN?: string;
-  DB_CA_CERT?: string;
 }
 
 // Create Hono app
@@ -59,23 +58,17 @@ app.use('/api/*', async (c, next) => {
 // Health check endpoint (no auth required)
 app.get('/health', async (c) => {
   try {
-    // Environment variable check for debugging
     if (!c.env.DATABASE_URL) {
       throw new Error('DATABASE_URL environment variable is not set');
     }
 
-    const db = new DatabaseService({ 
-      DATABASE_URL: c.env.DATABASE_URL,
-      DB_CA_CERT: c.env.DB_CA_CERT 
-    });
+    const db = new DatabaseService({ DATABASE_URL: c.env.DATABASE_URL });
     const dbHealthy = await db.healthCheck();
 
     return c.json({
       status: dbHealthy ? 'healthy' : 'degraded',
       timestamp: new Date().toISOString(),
-      database: dbHealthy ? 'connected' : 'disconnected',
-      // Adding debug info temporarily (DO NOT USE IN PROD)
-      debug_db_url_exists: !!c.env.DATABASE_URL
+      database: dbHealthy ? 'connected' : 'disconnected'
     });
   } catch (error) {
     return c.json(
@@ -91,10 +84,7 @@ app.get('/health', async (c) => {
 
 // Session endpoint - POST /api/session
 app.post('/api/session', async (c) => {
-  const db = new DatabaseService({ 
-    DATABASE_URL: c.env.DATABASE_URL,
-    DB_CA_CERT: c.env.DB_CA_CERT 
-  });
+  const db = new DatabaseService({ DATABASE_URL: c.env.DATABASE_URL });
   return handleSession(c, {
     db,
     ipinfoToken: c.env.IPINFO_TOKEN,
@@ -103,19 +93,13 @@ app.post('/api/session', async (c) => {
 
 // Events endpoint - POST /api/events
 app.post('/api/events', async (c) => {
-  const db = new DatabaseService({ 
-    DATABASE_URL: c.env.DATABASE_URL,
-    DB_CA_CERT: c.env.DB_CA_CERT 
-  });
+  const db = new DatabaseService({ DATABASE_URL: c.env.DATABASE_URL });
   return handleEvents(c, { db });
 });
 
 // Errors endpoint - POST /api/errors
 app.post('/api/errors', async (c) => {
-  const db = new DatabaseService({ 
-    DATABASE_URL: c.env.DATABASE_URL,
-    DB_CA_CERT: c.env.DB_CA_CERT 
-  });
+  const db = new DatabaseService({ DATABASE_URL: c.env.DATABASE_URL });
   return handleError(c, { db });
 });
 

@@ -18,8 +18,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
     "hono": "^4.7.12",
-    "postgres": "^3.4.8",
     "zod": "^3.24.1"
   },
   "devDependencies": {
