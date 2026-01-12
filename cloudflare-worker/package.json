@@ -1,0 +1,30 @@
+{
+  "name": "flutter-analytics-api",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for Flutter app analytics collection",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "cloudflare",
+    "worker",
+    "analytics",
+    "postgresql"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "hono": "^4.7.12",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "typescript": "^5.7.2",
+    "wrangler": "^3.94.0"
+  }
+}
