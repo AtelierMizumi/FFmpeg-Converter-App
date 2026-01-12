@@ -1,3 +1,4 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import dotenv
 import 'package:flutter/foundation.dart'; // Add this for kIsWeb
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -10,6 +11,18 @@ import 'services/analytics_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load .env file
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    // If .env is missing (e.g., in production/release if secrets are passed via build args),
+    // we might ignore or handle gracefully.
+    // However, dotenv is typically used for local dev.
+    if (kDebugMode) {
+      print('Warning: .env file not found or failed to load: $e');
+    }
+  }
 
   // Initialize MediaKit
   if (!kIsWeb) {

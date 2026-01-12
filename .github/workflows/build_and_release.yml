@@ -30,7 +30,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Linux app
-        run: flutter build linux --release --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }}
+        run: flutter build linux --release --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }} --dart-define=ANALYTICS_API_KEY=${{ secrets.ANALYTICS_API_KEY }} --dart-define=ANALYTICS_WORKER_URL=${{ vars.ANALYTICS_WORKER_URL || 'https://ffmpeg-analytics-worker.thuanc177.workers.dev' }}
 
       - name: Create portable Linux package
         run: |
@@ -98,7 +98,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Windows app
-        run: flutter build windows --release --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }}
+        run: flutter build windows --release --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }} --dart-define=ANALYTICS_API_KEY=${{ secrets.ANALYTICS_API_KEY }} --dart-define=ANALYTICS_WORKER_URL=${{ vars.ANALYTICS_WORKER_URL || 'https://ffmpeg-analytics-worker.thuanc177.workers.dev' }}
 
       - name: Rename executable for clarity
         run: |
@@ -179,7 +179,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Web
-        run: flutter build web --release --base-href /FFmpeg-Converter-App/
+        run: flutter build web --release --base-href /FFmpeg-Converter-App/ --dart-define=ANALYTICS_API_KEY=${{ secrets.ANALYTICS_API_KEY }} --dart-define=ANALYTICS_WORKER_URL=${{ vars.ANALYTICS_WORKER_URL || 'https://ffmpeg-analytics-worker.thuanc177.workers.dev' }}
 
       - name: Fix Source Map 404 Errors
         run: |
@@ -221,7 +221,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Android APK
-        run: flutter build apk --release --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }}
+        run: flutter build apk --release --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }} --dart-define=ANALYTICS_API_KEY=${{ secrets.ANALYTICS_API_KEY }} --dart-define=ANALYTICS_WORKER_URL=${{ vars.ANALYTICS_WORKER_URL || 'https://ffmpeg-analytics-worker.thuanc177.workers.dev' }}
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
         
