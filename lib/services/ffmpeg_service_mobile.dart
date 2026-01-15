@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -9,6 +8,9 @@ import 'ffmpeg_service_interface.dart';
 class FFmpegServiceMobile implements FFmpegService {
   static const platform = MethodChannel(
     'com.example.ffmpeg_converter_app/ffmpeg',
+  );
+  static const eventChannel = EventChannel(
+    'com.example.ffmpeg_converter_app/ffmpeg/events',
   );
 
   @override
@@ -45,16 +47,67 @@ class FFmpegServiceMobile implements FFmpegService {
 
     debugPrint('Running Native FFmpeg: ${ffmpegArgs.join(' ')}');
 
+    // Duration parsing state variables
+    Duration? totalDuration;
+
+    // Listen to events
+    final subscription = eventChannel.receiveBroadcastStream().listen(
+      (event) {
+        if (event is Map) {
+          final type = event['type'];
+
+          if (type == 'log') {
+            final message = event['message'] as String;
+            // Parse Duration from logs if not yet found
+            if (totalDuration == null) {
+              final durMatch = RegExp(
+                r'Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})',
+              ).firstMatch(message);
+              if (durMatch != null) {
+                try {
+                  final h = int.parse(durMatch.group(1)!);
+                  final m = int.parse(durMatch.group(2)!);
+                  final s = double.parse(durMatch.group(3)!);
+                  totalDuration = Duration(
+                    hours: h,
+                    minutes: m,
+                    milliseconds: (s * 1000).toInt(),
+                  );
+                  debugPrint('FFmpeg parsed duration: $totalDuration');
+                } catch (e) {
+                  debugPrint('Error parsing duration: $e');
+                }
+              }
+            }
+          } else if (type == 'statistics') {
+            // 'time' is usually in milliseconds from FFmpegKit
+            final time = event['time'];
+            if (time != null && totalDuration != null && onProgress != null) {
+              final currentTimeMs = (time is int)
+                  ? time
+                  : (time as num).toInt();
+
+              final progress = currentTimeMs / totalDuration!.inMilliseconds;
+              final clampedProgress = progress > 1.0
+                  ? 1.0
+                  : (progress < 0.0 ? 0.0 : progress);
+
+              onProgress(
+                clampedProgress,
+                'Converting... ${(clampedProgress * 100).toInt()}%',
+              );
+            }
+          }
+        }
+      },
+      onError: (error) {
+        debugPrint('FFmpeg Event Error: $error');
+      },
+    );
+
     try {
       if (onProgress != null) {
         onProgress(0.0, 'Starting conversion...');
-      }
-
-      // TODO: Implement progress updates via EventChannel if needed.
-      // Current implementation awaits completion.
-      // Simulating progress for better UX in absence of real-time callbacks from MethodChannel
-      if (onProgress != null) {
-        onProgress(0.1, 'Converting...');
       }
 
       await platform.invokeMethod('execute', {'args': ffmpegArgs});
@@ -67,6 +120,8 @@ class FFmpegServiceMobile implements FFmpegService {
     } on PlatformException catch (e) {
       debugPrint("FFmpeg Native Error: ${e.message}");
       throw Exception('FFmpeg conversion failed: ${e.message}');
+    } finally {
+      subscription.cancel();
     }
   }
 

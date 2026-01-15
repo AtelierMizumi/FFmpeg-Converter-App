@@ -154,7 +154,7 @@ The project automatically builds on push to main branch.
 - `LINUX_README.txt` ← Linux instructions
 
 **Key improvements:**
-- ✅ Windows EXE has usezr-friendly name
+- ✅ Windows EXE has user-friendly name
 - ✅ No wrapper scripts needed
 - ✅ Files at root level when extracted
 - ✅ Beautiful, localized README files
@@ -162,7 +162,7 @@ The project automatically builds on push to main branch.
 
 ## Distribution
 
-### Windows 🪟
+### Windows 🪟  
 Users:
 1. Download ZIP
 2. Extract (Right-click → Extract All)

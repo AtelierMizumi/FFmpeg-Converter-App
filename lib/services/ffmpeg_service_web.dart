@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:ffmpeg_wasm/ffmpeg_wasm.dart';
@@ -51,7 +50,7 @@ class FFmpegServiceImpl implements FFmpegService {
 
     _ffmpeg.unlink(inputName);
 
-    return XFile.fromData(Uint8List.fromList(outputData!), name: outputName);
+    return XFile.fromData(Uint8List.fromList(outputData), name: outputName);
   }
 
   @override

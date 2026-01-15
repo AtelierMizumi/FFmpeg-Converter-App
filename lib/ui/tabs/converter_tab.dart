@@ -8,6 +8,7 @@ import 'package:gap/gap.dart';
 import 'package:open_file/open_file.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_test_application/l10n/app_localizations.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../services/ffmpeg_service.dart';
 import '../../services/video_validator.dart';
 import '../widgets/video_comparison.dart';
@@ -62,10 +63,13 @@ class _ConverterTabState extends State<ConverterTab>
   Future<void> _initFFmpeg() async {
     try {
       await _ffmpegService.initialize();
-      if (mounted) setState(() => _initialized = true);
+      if (mounted) {
+        setState(() => _initialized = true);
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() => _statusMessage = 'Error initializing FFmpeg: $e');
+      }
     }
   }
 
@@ -103,10 +107,11 @@ class _ConverterTabState extends State<ConverterTab>
           selectedXFile,
         );
         if (!validation.isValid) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(validation.error!)));
+          if (mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(validation.error!)));
+          }
           return;
         }
 
@@ -130,10 +135,36 @@ class _ConverterTabState extends State<ConverterTab>
   Future<void> _processVideo() async {
     final l10n = AppLocalizations.of(context)!;
     if (_selectedFile == null) return;
+
+    // Check Permissions on Android
+    if (Platform.isAndroid) {
+      if (await Permission.storage.request().isDenied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Storage permission is required.')),
+          );
+        }
+        return;
+      }
+
+      // For Android 11+ (API 30+), Manage External Storage might be needed for broader access,
+      // but for basic scoped storage or MediaStore, standard permissions might suffice or differ.
+      // However, typical FFmpeg operations often need direct file path access.
+      if (await Permission.manageExternalStorage.isPermanentlyDenied) {
+        // Open settings if permanently denied
+        openAppSettings();
+      }
+      if (await Permission.manageExternalStorage.request().isDenied) {
+        // Fallback or specific handling
+      }
+    }
+
     if (!_initialized) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('FFmpeg initializing... wait a moment')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('FFmpeg initializing... wait a moment')),
+        );
+      }
       return;
     }
 
@@ -142,10 +173,16 @@ class _ConverterTabState extends State<ConverterTab>
     // On Mobile, we use temp directory and user saves manually later.
     final isDesktop =
         !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
+    // Allow picking output directory on Android too if desired, but default to temp/cache for safety
+    // if not explicitly chosen.
+
     if (isDesktop && _outputDirectory == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.folderExportRequired)));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.folderExportRequired)));
+      }
       return;
     }
 
@@ -328,7 +365,7 @@ class _ConverterTabState extends State<ConverterTab>
   }
 
   Future<void> _saveOutput() async {
-    final l10n = AppLocalizations.of(context)!;
+    // final l10n = AppLocalizations.of(context)!; // l10n is not used
     if (_outputFile == null) return;
     String? outputFile = await FilePicker.platform.saveFile(
       dialogTitle: 'Save Video',
@@ -336,10 +373,11 @@ class _ConverterTabState extends State<ConverterTab>
     );
     if (outputFile != null) {
       await _outputFile!.saveTo(outputFile);
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Saved to $outputFile')));
+      }
     }
   }
 
@@ -414,12 +452,14 @@ class _ConverterTabState extends State<ConverterTab>
             final file = detail.files.first;
             final validation = await VideoValidator.validateInputFile(file);
             if (!validation.isValid) {
-              if (!mounted) return;
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(validation.error!)));
+              if (mounted) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(validation.error!)));
+              }
               return;
             }
+
             setState(() {
               _selectedFile = file;
               _outputFile = null;

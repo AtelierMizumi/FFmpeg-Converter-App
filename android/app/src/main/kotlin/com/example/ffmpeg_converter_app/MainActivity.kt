@@ -13,7 +13,9 @@ import java.util.concurrent.Executors
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.example.ffmpeg_converter_app/ffmpeg"
+    private val EVENT_CHANNEL = "com.example.ffmpeg_converter_app/ffmpeg/events"
     private var currentSessionId: Long? = null
+    private var eventSink: io.flutter.plugin.common.EventChannel.EventSink? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -32,6 +34,18 @@ class MainActivity : FlutterActivity() {
                 result.notImplemented()
             }
         }
+
+        io.flutter.plugin.common.EventChannel(flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL).setStreamHandler(
+            object : io.flutter.plugin.common.EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, events: io.flutter.plugin.common.EventChannel.EventSink?) {
+                    eventSink = events
+                }
+
+                override fun onCancel(arguments: Any?) {
+                    eventSink = null
+                }
+            }
+        )
     }
 
     private fun executeFFmpeg(args: List<String>, result: MethodChannel.Result) {
@@ -57,13 +71,23 @@ class MainActivity : FlutterActivity() {
                 currentSessionId = null
             }
         }, { log ->
-            // Optional: Send logs back to Flutter if needed via an EventChannel
-            // For now, we rely on the final output or logcat
+            // Log Callback
+            runOnUiThread {
+                eventSink?.success(mapOf(
+                    "type" to "log",
+                    "message" to log.message
+                ))
+            }
         }) { statistics ->
-            // Optional: Send progress statistics back to Flutter
-            // This would require a separate EventChannel or repeated callbacks which MethodChannel.Result doesn't support for single response.
-            // For this implementation, we will rely on the final result.
-            // If progress is strictly needed, we would need to set up an EventChannel.
+            // Statistics Callback
+            runOnUiThread {
+                eventSink?.success(mapOf(
+                    "type" to "statistics",
+                    "time" to statistics.time,
+                    "size" to statistics.size,
+                    "speed" to statistics.speed
+                ))
+            }
         }.also { session ->
              currentSessionId = session.sessionId
         }
