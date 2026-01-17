@@ -1,6 +1,7 @@
 {
   "appTitle": "FFmpeg Converter Pro",
   "tabConverter": "Chuyển đổi",
+  "tabEditor": "Biên tập",
   "tabGuide": "Hướng dẫn",
   "tabAbout": "Thông tin",
   "dragDropText": "Kéo thả video vào đây\nhoặc click để chọn file",
@@ -43,5 +44,15 @@
   "sectionReferences": "Tài liệu tham khảo",
   "developedBy": "Phát triển bởi",
   "technologies": "Công nghệ sử dụng",
-  "librariesLicenses": "Thư viện bên thứ ba & Giấy phép"
+  "librariesLicenses": "Thư viện bên thứ ba & Giấy phép",
+  "trimVideo": "Cắt Video",
+  "mergeVideo": "Ghép Video",
+  "startTime": "Thời gian bắt đầu",
+  "endTime": "Thời gian kết thúc",
+  "addClip": "Thêm Clip",
+  "processMerge": "Tiến hành Ghép",
+  "processTrim": "Tiến hành Cắt",
+  "editorMode": "Chế độ Biên tập",
+  "modeTrim": "Chế độ Cắt",
+  "modeMerge": "Chế độ Ghép"
 }

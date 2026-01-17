@@ -6,6 +6,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:flutter_test_application/l10n/app_localizations.dart';
 import 'ui/landing/landing_page.dart';
 import 'ui/tabs/converter_tab.dart';
+import 'ui/editor/editor_tab.dart';
 import 'ui/tabs/guide_tab.dart';
 import 'ui/tabs/credits_tab.dart';
 import 'services/analytics_service.dart';
@@ -132,7 +133,7 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: Row(
@@ -171,13 +172,14 @@ class MainScreen extends StatelessWidget {
           bottom: TabBar(
             tabs: [
               Tab(icon: const Icon(Icons.transform), text: l10n.tabConverter),
+              Tab(icon: const Icon(Icons.edit_note), text: l10n.tabEditor),
               Tab(icon: const Icon(Icons.menu_book), text: l10n.tabGuide),
               Tab(icon: const Icon(Icons.info), text: l10n.tabAbout),
             ],
           ),
         ),
         body: const TabBarView(
-          children: [ConverterTab(), GuideTab(), CreditsTab()],
+          children: [ConverterTab(), EditorTab(), GuideTab(), CreditsTab()],
         ),
       ),
     );

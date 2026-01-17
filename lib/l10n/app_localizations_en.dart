@@ -15,6 +15,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabConverter => 'Converter';
 
   @override
+  String get tabEditor => 'Editor';
+
+  @override
   String get tabGuide => 'Guide';
 
   @override
@@ -155,4 +158,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get librariesLicenses => 'Third Party Libraries & Licenses';
+
+  @override
+  String get trimVideo => 'Trim Video';
+
+  @override
+  String get mergeVideo => 'Merge Video';
+
+  @override
+  String get startTime => 'Start Time';
+
+  @override
+  String get endTime => 'End Time';
+
+  @override
+  String get addClip => 'Add Clip';
+
+  @override
+  String get processMerge => 'Process Merge';
+
+  @override
+  String get processTrim => 'Process Trim';
+
+  @override
+  String get editorMode => 'Editor Mode';
+
+  @override
+  String get modeTrim => 'Trim Mode';
+
+  @override
+  String get modeMerge => 'Merge Mode';
 }

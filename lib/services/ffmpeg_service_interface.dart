@@ -12,5 +12,11 @@ abstract class FFmpegService {
     String? outputFilename,
     ProgressCallback? onProgress,
   });
+
+  Future<XFile?> executeFFmpeg(
+    List<String> command, {
+    ProgressCallback? onProgress,
+  });
+
   Future<void> cancel();
 }

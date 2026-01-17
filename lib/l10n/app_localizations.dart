@@ -114,6 +114,12 @@ abstract class AppLocalizations {
   /// **'Converter'**
   String get tabConverter;
 
+  /// No description provided for @tabEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Editor'**
+  String get tabEditor;
+
   /// No description provided for @tabGuide.
   ///
   /// In en, this message translates to:
@@ -371,6 +377,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Third Party Libraries & Licenses'**
   String get librariesLicenses;
+
+  /// No description provided for @trimVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Trim Video'**
+  String get trimVideo;
+
+  /// No description provided for @mergeVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge Video'**
+  String get mergeVideo;
+
+  /// No description provided for @startTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Time'**
+  String get startTime;
+
+  /// No description provided for @endTime.
+  ///
+  /// In en, this message translates to:
+  /// **'End Time'**
+  String get endTime;
+
+  /// No description provided for @addClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Clip'**
+  String get addClip;
+
+  /// No description provided for @processMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Process Merge'**
+  String get processMerge;
+
+  /// No description provided for @processTrim.
+  ///
+  /// In en, this message translates to:
+  /// **'Process Trim'**
+  String get processTrim;
+
+  /// No description provided for @editorMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Editor Mode'**
+  String get editorMode;
+
+  /// No description provided for @modeTrim.
+  ///
+  /// In en, this message translates to:
+  /// **'Trim Mode'**
+  String get modeTrim;
+
+  /// No description provided for @modeMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge Mode'**
+  String get modeMerge;
 }
 
 class _AppLocalizationsDelegate

@@ -1,6 +1,7 @@
 {
   "appTitle": "FFmpeg Converter Pro",
   "tabConverter": "Converter",
+  "tabEditor": "Editor",
   "tabGuide": "Guide",
   "tabAbout": "About",
   "dragDropText": "Drag & drop video here\nor click to pick file",
@@ -43,5 +44,15 @@
   "sectionReferences": "References",
   "developedBy": "Developed by",
   "technologies": "Technologies Used",
-  "librariesLicenses": "Third Party Libraries & Licenses"
+  "librariesLicenses": "Third Party Libraries & Licenses",
+  "trimVideo": "Trim Video",
+  "mergeVideo": "Merge Video",
+  "startTime": "Start Time",
+  "endTime": "End Time",
+  "addClip": "Add Clip",
+  "processMerge": "Process Merge",
+  "processTrim": "Process Trim",
+  "editorMode": "Editor Mode",
+  "modeTrim": "Trim Mode",
+  "modeMerge": "Merge Mode"
 }

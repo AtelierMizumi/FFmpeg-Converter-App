@@ -15,6 +15,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tabConverter => 'Chuyển đổi';
 
   @override
+  String get tabEditor => 'Biên tập';
+
+  @override
   String get tabGuide => 'Hướng dẫn';
 
   @override
@@ -155,4 +158,34 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get librariesLicenses => 'Thư viện bên thứ ba & Giấy phép';
+
+  @override
+  String get trimVideo => 'Cắt Video';
+
+  @override
+  String get mergeVideo => 'Ghép Video';
+
+  @override
+  String get startTime => 'Thời gian bắt đầu';
+
+  @override
+  String get endTime => 'Thời gian kết thúc';
+
+  @override
+  String get addClip => 'Thêm Clip';
+
+  @override
+  String get processMerge => 'Tiến hành Ghép';
+
+  @override
+  String get processTrim => 'Tiến hành Cắt';
+
+  @override
+  String get editorMode => 'Chế độ Biên tập';
+
+  @override
+  String get modeTrim => 'Chế độ Cắt';
+
+  @override
+  String get modeMerge => 'Chế độ Ghép';
 }

@@ -24,6 +24,16 @@ class FFmpegServiceImpl implements FFmpegService {
   }
 
   @override
+  Future<XFile?> executeFFmpeg(
+    List<String> command, {
+    ProgressCallback? onProgress,
+  }) {
+    throw UnimplementedError(
+      'FFmpegService is not implemented for this platform',
+    );
+  }
+
+  @override
   Future<void> cancel() {
     throw UnimplementedError(
       'FFmpegService is not implemented for this platform',

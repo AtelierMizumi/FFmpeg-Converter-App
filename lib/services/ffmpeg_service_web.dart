@@ -54,6 +54,34 @@ class FFmpegServiceImpl implements FFmpegService {
   }
 
   @override
+  Future<XFile?> executeFFmpeg(
+    List<String> command, {
+    ProgressCallback? onProgress,
+  }) async {
+    if (!_isLoaded) await initialize();
+
+    // WARNING: For Web, input files must be pre-loaded into MEMFS before calling this!
+    // This generic execute assumes files are already there or command handles it.
+    // Ideally, for complex multi-file scenarios on Web, specific handling is needed.
+    // But for now, we just run the command.
+
+    debugPrint('Running FFmpeg (Web Generic): ${command.join(' ')}');
+    await _ffmpeg.run(command);
+
+    // Assumption: Last arg is output file.
+    final outputName = command.last;
+
+    // Check if output exists
+    try {
+      final outputData = _ffmpeg.readFile(outputName);
+      return XFile.fromData(Uint8List.fromList(outputData), name: outputName);
+    } catch (e) {
+      debugPrint("Web Output read error: $e");
+      return null;
+    }
+  }
+
+  @override
   Future<void> cancel() async {
     _ffmpeg.exit();
     _isLoaded = false;

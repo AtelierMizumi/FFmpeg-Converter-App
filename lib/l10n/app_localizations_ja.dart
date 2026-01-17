@@ -15,6 +15,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tabConverter => '変換';
 
   @override
+  String get tabEditor => 'Editor';
+
+  @override
   String get tabGuide => 'ガイド';
 
   @override
@@ -153,4 +156,34 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get librariesLicenses => 'サードパーティライブラリとライセンス';
+
+  @override
+  String get trimVideo => 'Trim Video';
+
+  @override
+  String get mergeVideo => 'Merge Video';
+
+  @override
+  String get startTime => 'Start Time';
+
+  @override
+  String get endTime => 'End Time';
+
+  @override
+  String get addClip => 'Add Clip';
+
+  @override
+  String get processMerge => 'Process Merge';
+
+  @override
+  String get processTrim => 'Process Trim';
+
+  @override
+  String get editorMode => 'Editor Mode';
+
+  @override
+  String get modeTrim => 'Trim Mode';
+
+  @override
+  String get modeMerge => 'Merge Mode';
 }

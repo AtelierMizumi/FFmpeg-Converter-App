@@ -45,6 +45,24 @@ class FFmpegServiceMobile implements FFmpegService {
     // Note: 'yes' overwrite (-y) is usually standard for temp files
     final ffmpegArgs = <String>['-y', '-i', input.path, ...args, outputPath];
 
+    await _executeProcess(ffmpegArgs, onProgress);
+    return XFile(outputPath);
+  }
+
+  @override
+  Future<XFile?> executeFFmpeg(
+    List<String> command, {
+    ProgressCallback? onProgress,
+  }) async {
+    final outputPath = command.last; // Simple assumption
+    await _executeProcess(command, onProgress);
+    return XFile(outputPath);
+  }
+
+  Future<void> _executeProcess(
+    List<String> ffmpegArgs,
+    ProgressCallback? onProgress,
+  ) async {
     debugPrint('Running Native FFmpeg: ${ffmpegArgs.join(' ')}');
 
     // Duration parsing state variables
@@ -94,7 +112,7 @@ class FFmpegServiceMobile implements FFmpegService {
 
               onProgress(
                 clampedProgress,
-                'Converting... ${(clampedProgress * 100).toInt()}%',
+                'Processing... ${(clampedProgress * 100).toInt()}%',
               );
             }
           }
@@ -107,7 +125,7 @@ class FFmpegServiceMobile implements FFmpegService {
 
     try {
       if (onProgress != null) {
-        onProgress(0.0, 'Starting conversion...');
+        onProgress(0.0, 'Starting processing...');
       }
 
       await platform.invokeMethod('execute', {'args': ffmpegArgs});
@@ -115,8 +133,6 @@ class FFmpegServiceMobile implements FFmpegService {
       if (onProgress != null) {
         onProgress(1.0, 'Completed');
       }
-
-      return XFile(outputPath);
     } on PlatformException catch (e) {
       debugPrint("FFmpeg Native Error: ${e.message}");
       throw Exception('FFmpeg conversion failed: ${e.message}');

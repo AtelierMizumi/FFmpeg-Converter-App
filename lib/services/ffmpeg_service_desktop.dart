@@ -142,9 +142,37 @@ class FFmpegServiceImpl implements FFmpegService {
     // Build arguments: -i INPUT ARGS OUTPUT
     final ffmpegArgs = <String>['-y', '-i', input.path, ...args, outputPath];
 
-    debugPrint('Running bundled FFmpeg: $_ffmpegPath ${ffmpegArgs.join(' ')}');
+    // Reuse generic execution method
+    await _executeProcess(ffmpegArgs, onProgress);
+    return XFile(outputPath);
+  }
 
-    _process = await Process.start(_ffmpegPath!, ffmpegArgs);
+  @override
+  Future<XFile?> executeFFmpeg(
+    List<String> command, {
+    ProgressCallback? onProgress,
+  }) async {
+    if (_isMobile) {
+      return _mobileService.executeFFmpeg(command, onProgress: onProgress);
+    }
+
+    if (_ffmpegPath == null) await initialize();
+
+    // The last argument is assumed to be the output path in generic commands
+    // This is a simplification; for complex commands, we might need explicit output path handling
+    final outputPath = command.last;
+
+    await _executeProcess(command, onProgress);
+    return XFile(outputPath);
+  }
+
+  Future<void> _executeProcess(
+    List<String> args,
+    ProgressCallback? onProgress,
+  ) async {
+    debugPrint('Running bundled FFmpeg: $_ffmpegPath ${args.join(' ')}');
+
+    _process = await Process.start(_ffmpegPath!, args);
 
     // Duration parsing state variables
     Duration? totalDuration;
@@ -196,7 +224,7 @@ class FFmpegServiceImpl implements FFmpegService {
                 final clampedProgress = progress > 1.0 ? 1.0 : progress;
                 onProgress(
                   clampedProgress,
-                  'Converting... ${(clampedProgress * 100).toInt()}%',
+                  'Processing... ${(clampedProgress * 100).toInt()}%',
                 );
               } catch (e) {
                 // ignore
@@ -216,7 +244,6 @@ class FFmpegServiceImpl implements FFmpegService {
     _process = null;
 
     if (onProgress != null) onProgress(1.0, 'Completed');
-    return XFile(outputPath);
   }
 
   @override
