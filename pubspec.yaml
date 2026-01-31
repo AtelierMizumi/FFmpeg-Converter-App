@@ -1,5 +1,5 @@
-name: flutter_test_application
-description: "A new Flutter project."
+name: ffmpeg_converter_app
+description: "A cross-platform FFmpeg video converter application."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -25,7 +25,10 @@ dependencies:
   media_kit: ^1.2.6
   media_kit_video: ^2.0.1
   media_kit_libs_video: ^1.0.7
-  # ffmpeg_kit_flutter_full_gpl: ^6.0.3  # Disabled - package discontinued and not available
+  
+  # FFmpeg for mobile platforms (Android, iOS, macOS)
+  # Using maintained fork with updated Flutter 3+ bindings
+  ffmpeg_kit_flutter_new: ^4.1.0
   
   # Analytics dependencies
   device_info_plus: ^10.1.2

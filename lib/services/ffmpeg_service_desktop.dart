@@ -252,7 +252,8 @@ class FFmpegServiceImpl implements FFmpegService {
       return _mobileService.cancel();
     }
 
-    if (_process != null) return;
+    // If there's no process running, nothing to cancel
+    if (_process == null) return;
 
     debugPrint('Cancelling FFmpeg process...');
     _process!.kill(ProcessSignal.sigterm);

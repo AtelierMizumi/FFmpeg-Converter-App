@@ -9,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:open_file/open_file.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_test_application/l10n/app_localizations.dart';
+import 'package:ffmpeg_converter_app/l10n/app_localizations.dart';
 
 import '../../services/ffmpeg_service.dart';
 import '../../services/video_validator.dart';
@@ -86,8 +86,13 @@ class _EditorTabState extends State<EditorTab>
         setState(() {
           if (_mode == 'trim') {
             _selectedFile = xFile;
-            // Reset trim range (mock duration for now, ideally read from file)
-            _totalDurationSeconds = 100.0; // TODO: Get real duration
+            // FIXME: This uses a placeholder duration value
+            // To properly implement this, we need to:
+            // 1. Add getVideoDuration() method to FFmpegService interface
+            // 2. Use ffprobe or ffmpeg -i to extract actual video duration
+            // 3. Parse the output and update _totalDurationSeconds
+            // For now, defaulting to 300 seconds (5 minutes) as a reasonable estimate
+            _totalDurationSeconds = 300.0;
             _trimRange = RangeValues(0, _totalDurationSeconds);
           } else {
             _mergeFiles.add(xFile!);

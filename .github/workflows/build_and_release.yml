@@ -327,20 +327,25 @@ jobs:
             
             ---
             
-            ### 🤖 Android
+            ### 🤖 Android - ✨ MỚI: Đã hỗ trợ chuyển đổi video!
             
             ```
             1. Tải file FFmpeg-Converter-Android.apk
             2. Mở file APK để cài đặt
             3. Cho phép "Install from unknown sources" nếu được hỏi
+            4. Mở app và bắt đầu chuyển đổi video!
             ```
             
-            ⚠️ **Lưu ý quan trọng:** Phiên bản Android **KHÔNG hỗ trợ chuyển đổi video** do thư viện FFmpeg Kit đã bị discontinued. 
+            🎉 **Tin vui:** Phiên bản Android **ĐÃ HỖ TRỢ ĐẦY ĐỦ** chuyển đổi video!
             
-            👉 Để chuyển đổi video, vui lòng dùng:
-            - 🌐 **Web version** (khuyên dùng nhất): [GitHub Pages](https://yourusername.github.io/FFmpeg-Converter-App/)
-            - 🪟 Windows portable
-            - 🐧 Linux portable
+            **Tính năng:**
+            - ✅ Chuyển đổi video trực tiếp trên Android
+            - ✅ Hỗ trợ H.264, H.265, VP9, AV1 codecs
+            - ✅ Điều chỉnh bitrate, resolution, CRF
+            - ✅ Xem progress bar real-time
+            - ✅ MIỄN PHÍ, KHÔNG QUẢNG CÁO
+            
+            **Yêu cầu:** Android 7.0 (API 24) trở lên
             
             ---
             
@@ -357,7 +362,7 @@ jobs:
             
             ### 🌐 Dùng ngay trên Web - Không cần tải!
             
-            Truy cập: **[https://yourusername.github.io/FFmpeg-Converter-App/](https://yourusername.github.io/FFmpeg-Converter-App/)**
+            Truy cập: **[https://ateliermizumi.github.io/FFmpeg-Converter-App/](https://ateliermizumi.github.io/FFmpeg-Converter-App/)**
             
             - ✅ Không cần cài đặt
             - ✅ Chạy trên mọi hệ điều hành (Windows, Mac, Linux, Android, iOS)
@@ -369,17 +374,20 @@ jobs:
             
             | Tính năng | Windows | Linux | Android | Web |
             |-----------|---------|-------|---------|-----|
-            | Chuyển đổi video | ✅ | ✅ | ❌ | ✅ |
+            | Chuyển đổi video | ✅ | ✅ | ✅ | ✅ |
             | Portable/No install | ✅ | ✅ | ❌ | ✅ |
-            | Tốc độ | ⚡⚡⚡ | ⚡⚡⚡ | - | ⚡⚡ |
+            | Tốc độ | ⚡⚡⚡ | ⚡⚡⚡ | ⚡⚡ | ⚡⚡ |
             | Video preview | ✅ | ✅ | ✅ | ✅ |
+            | Miễn phí, không quảng cáo | ✅ | ✅ | ✅ | ✅ |
             
             ---
             
             **🎉 Khuyến nghị:** 
-            - Desktop users: Tải Windows/Linux portable
-            - Dùng thử nhanh: Dùng Web version
-            - Mobile: Dùng Web version trên browser
+            - Desktop users: Tải Windows/Linux portable - Hiệu suất tốt nhất ⚡
+            - Mobile users: Tải Android APK - Chuyển đổi video trực tiếp trên điện thoại! 📱
+            - Dùng thử nhanh: Dùng Web version - Không cần cài đặt
+            
+            **🌟 ĐẶC BIỆT:** Android version là công cụ chuyển đổi video MIỄN PHÍ, KHÔNG QUẢNG CÁO hiếm hoi trên thị trường!
             
             **Built with:** Flutter 💙 | **Build date:** ${{ github.event.head_commit.timestamp }}
           draft: false

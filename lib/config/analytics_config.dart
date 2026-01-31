@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AnalyticsConfig {
   static const bool enabled = true;
-  static const bool debugMode = true;
+  // Debug mode should only be enabled in debug builds, not in production
+  static bool get debugMode => kDebugMode;
   static const int maxBatchSize = 10;
   static const Duration batchInterval = Duration(seconds: 30);
 

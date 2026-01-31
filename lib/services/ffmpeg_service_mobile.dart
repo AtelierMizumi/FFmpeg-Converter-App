@@ -1,22 +1,22 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:path/path.dart' as p;
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit_config.dart';
+import 'package:ffmpeg_kit_flutter_new/return_code.dart';
+import 'package:ffmpeg_kit_flutter_new/statistics.dart';
+import 'package:ffmpeg_kit_flutter_new/log.dart';
 import 'ffmpeg_service_interface.dart';
 
+/// FFmpeg service implementation for mobile platforms (Android, iOS)
+/// Uses ffmpeg_kit_flutter_new package
 class FFmpegServiceMobile implements FFmpegService {
-  static const platform = MethodChannel(
-    'com.example.ffmpeg_converter_app/ffmpeg',
-  );
-  static const eventChannel = EventChannel(
-    'com.example.ffmpeg_converter_app/ffmpeg/events',
-  );
-
   @override
   Future<void> initialize() async {
-    // Native library is initialized lazily
-    debugPrint("FFmpegKit Mobile - Native Bridge Initialized");
+    debugPrint("✅ FFmpegKit Mobile - Initialized with ffmpeg_kit_flutter_new v4.1.0");
+    debugPrint("📱 Mobile video conversion is now FULLY SUPPORTED!");
   }
 
   @override
@@ -28,25 +28,115 @@ class FFmpegServiceMobile implements FFmpegService {
     String? outputFilename,
     ProgressCallback? onProgress,
   }) async {
+    // Determine output path
     String targetDir;
     if (outputDirectory != null) {
       targetDir = outputDirectory;
     } else {
-      final tempDir = await getTemporaryDirectory();
-      targetDir = tempDir.path;
+      // Use app's document directory on mobile
+      final Directory appDir = await getApplicationDocumentsDirectory();
+      targetDir = appDir.path;
     }
 
     final outputName =
         outputFilename ??
-        'output_${DateTime.now().millisecondsSinceEpoch}.$outputExtension';
+        'converted_${DateTime.now().millisecondsSinceEpoch}.$outputExtension';
     final outputPath = p.join(targetDir, outputName);
 
-    // Build arguments: -i INPUT ARGS OUTPUT
-    // Note: 'yes' overwrite (-y) is usually standard for temp files
-    final ffmpegArgs = <String>['-y', '-i', input.path, ...args, outputPath];
+    // Build FFmpeg command: -i INPUT ARGS OUTPUT
+    final command = '-y -i "${input.path}" ${args.join(' ')} "$outputPath"';
+    
+    debugPrint('🎬 FFmpegKit Mobile: Executing command: $command');
 
-    await _executeProcess(ffmpegArgs, onProgress);
-    return XFile(outputPath);
+    // Track progress
+    if (onProgress != null) {
+      onProgress(0.0, 'Starting conversion...');
+    }
+
+    // Duration parsing state
+    Duration? totalDuration;
+    int lastStatisticsTime = 0;
+
+    // Enable statistics callback for this session
+    await FFmpegKitConfig.enableStatisticsCallback((Statistics statistics) {
+      final time = statistics.getTime();
+      
+      // Update progress every 100ms to avoid too many updates
+      if (time - lastStatisticsTime > 100) {
+        lastStatisticsTime = time;
+        
+        if (totalDuration != null && onProgress != null) {
+          final currentTimeMs = time;
+          final totalTimeMs = totalDuration!.inMilliseconds;
+          
+          if (totalTimeMs > 0) {
+            final progress = (currentTimeMs / totalTimeMs).clamp(0.0, 1.0);
+            onProgress(
+              progress,
+              'Converting... ${(progress * 100).toInt()}%',
+            );
+          }
+        }
+      }
+    });
+
+    // Enable log callback to parse duration
+    await FFmpegKitConfig.enableLogCallback((Log log) {
+      final message = log.getMessage();
+      
+      // Parse duration from logs if not yet found
+      if (totalDuration == null && message.contains('Duration:')) {
+        final durMatch = RegExp(
+          r'Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})',
+        ).firstMatch(message);
+        
+        if (durMatch != null) {
+          try {
+            final h = int.parse(durMatch.group(1)!);
+            final m = int.parse(durMatch.group(2)!);
+            final s = double.parse(durMatch.group(3)!);
+            
+            totalDuration = Duration(
+              hours: h,
+              minutes: m,
+              milliseconds: (s * 1000).toInt(),
+            );
+            
+            debugPrint('📊 Parsed video duration: $totalDuration');
+          } catch (e) {
+            debugPrint('⚠️ Error parsing duration: $e');
+          }
+        }
+      }
+    });
+
+    // Execute FFmpeg command
+    final session = await FFmpegKit.execute(command);
+    final returnCode = await session.getReturnCode();
+
+    // Check result
+    if (ReturnCode.isSuccess(returnCode)) {
+      debugPrint('✅ FFmpeg conversion successful!');
+      if (onProgress != null) {
+        onProgress(1.0, 'Completed!');
+      }
+      
+      // Verify output file exists
+      final outputFile = File(outputPath);
+      if (await outputFile.exists()) {
+        return XFile(outputPath);
+      } else {
+        throw Exception('Output file was not created: $outputPath');
+      }
+    } else if (ReturnCode.isCancel(returnCode)) {
+      debugPrint('⚠️ FFmpeg conversion was cancelled');
+      throw Exception('Conversion was cancelled by user');
+    } else {
+      final output = await session.getOutput();
+      debugPrint('❌ FFmpeg conversion failed with return code: $returnCode');
+      debugPrint('Error output: $output');
+      throw Exception('FFmpeg conversion failed: $output');
+    }
   }
 
   @override
@@ -54,99 +144,47 @@ class FFmpegServiceMobile implements FFmpegService {
     List<String> command, {
     ProgressCallback? onProgress,
   }) async {
-    final outputPath = command.last; // Simple assumption
-    await _executeProcess(command, onProgress);
-    return XFile(outputPath);
-  }
+    // Join command arguments
+    final commandString = command.join(' ');
+    
+    debugPrint('🎬 FFmpegKit Mobile: Executing custom command');
+    
+    if (onProgress != null) {
+      onProgress(0.0, 'Starting...');
+    }
 
-  Future<void> _executeProcess(
-    List<String> ffmpegArgs,
-    ProgressCallback? onProgress,
-  ) async {
-    debugPrint('Running Native FFmpeg: ${ffmpegArgs.join(' ')}');
+    // Execute command
+    final session = await FFmpegKit.execute(commandString);
+    final returnCode = await session.getReturnCode();
 
-    // Duration parsing state variables
-    Duration? totalDuration;
-
-    // Listen to events
-    final subscription = eventChannel.receiveBroadcastStream().listen(
-      (event) {
-        if (event is Map) {
-          final type = event['type'];
-
-          if (type == 'log') {
-            final message = event['message'] as String;
-            // Parse Duration from logs if not yet found
-            if (totalDuration == null) {
-              final durMatch = RegExp(
-                r'Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})',
-              ).firstMatch(message);
-              if (durMatch != null) {
-                try {
-                  final h = int.parse(durMatch.group(1)!);
-                  final m = int.parse(durMatch.group(2)!);
-                  final s = double.parse(durMatch.group(3)!);
-                  totalDuration = Duration(
-                    hours: h,
-                    minutes: m,
-                    milliseconds: (s * 1000).toInt(),
-                  );
-                  debugPrint('FFmpeg parsed duration: $totalDuration');
-                } catch (e) {
-                  debugPrint('Error parsing duration: $e');
-                }
-              }
-            }
-          } else if (type == 'statistics') {
-            // 'time' is usually in milliseconds from FFmpegKit
-            final time = event['time'];
-            if (time != null && totalDuration != null && onProgress != null) {
-              final currentTimeMs = (time is int)
-                  ? time
-                  : (time as num).toInt();
-
-              final progress = currentTimeMs / totalDuration!.inMilliseconds;
-              final clampedProgress = progress > 1.0
-                  ? 1.0
-                  : (progress < 0.0 ? 0.0 : progress);
-
-              onProgress(
-                clampedProgress,
-                'Processing... ${(clampedProgress * 100).toInt()}%',
-              );
-            }
-          }
+    // Check result
+    if (ReturnCode.isSuccess(returnCode)) {
+      debugPrint('✅ FFmpeg command executed successfully!');
+      if (onProgress != null) {
+        onProgress(1.0, 'Completed!');
+      }
+      
+      // Try to extract output path from command (last argument usually)
+      if (command.isNotEmpty) {
+        final outputPath = command.last;
+        final outputFile = File(outputPath);
+        if (await outputFile.exists()) {
+          return XFile(outputPath);
         }
-      },
-      onError: (error) {
-        debugPrint('FFmpeg Event Error: $error');
-      },
-    );
-
-    try {
-      if (onProgress != null) {
-        onProgress(0.0, 'Starting processing...');
       }
-
-      await platform.invokeMethod('execute', {'args': ffmpegArgs});
-
-      if (onProgress != null) {
-        onProgress(1.0, 'Completed');
-      }
-    } on PlatformException catch (e) {
-      debugPrint("FFmpeg Native Error: ${e.message}");
-      throw Exception('FFmpeg conversion failed: ${e.message}');
-    } finally {
-      subscription.cancel();
+      
+      return null;
+    } else {
+      final output = await session.getOutput();
+      debugPrint('❌ FFmpeg command failed: $output');
+      throw Exception('FFmpeg command failed: $output');
     }
   }
 
   @override
   Future<void> cancel() async {
-    try {
-      await platform.invokeMethod('cancel');
-    } on PlatformException catch (e) {
-      debugPrint("Failed to cancel FFmpeg: ${e.message}");
-    }
+    debugPrint('🛑 Cancelling all FFmpeg sessions...');
+    await FFmpegKit.cancel();
+    debugPrint('✅ All FFmpeg sessions cancelled');
   }
 }
