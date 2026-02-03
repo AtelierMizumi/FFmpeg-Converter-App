@@ -28,11 +28,11 @@ class ErrorReporter {
       await NetworkService.sendError(error);
 
       if (AnalyticsConfig.debugMode) {
-        print('Error reported: ${error.errorType}');
+        debugPrint('Error reported: ${error.errorType}');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Failed to report error: $e');
+        debugPrint('Failed to report error: $e');
       }
     }
   }
@@ -57,11 +57,11 @@ class ErrorReporter {
       await NetworkService.sendError(error);
 
       if (AnalyticsConfig.debugMode) {
-        print('Exception reported: ${error.errorType}');
+        debugPrint('Exception reported: ${error.errorType}');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Failed to report exception: $e');
+        debugPrint('Failed to report exception: $e');
       }
     }
   }
@@ -88,11 +88,11 @@ class ErrorReporter {
       await NetworkService.sendError(error);
 
       if (AnalyticsConfig.debugMode) {
-        print('Custom error reported: $errorType');
+        debugPrint('Custom error reported: $errorType');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Failed to report custom error: $e');
+        debugPrint('Failed to report custom error: $e');
       }
     }
   }
@@ -118,7 +118,7 @@ class ErrorReporter {
     };
 
     if (AnalyticsConfig.debugMode) {
-      print('Error handlers initialized');
+      debugPrint('Error handlers initialized');
     }
   }
 }

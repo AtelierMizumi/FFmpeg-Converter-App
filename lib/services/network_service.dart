@@ -28,18 +28,18 @@ class NetworkService {
 
       if (response.statusCode == 201) {
         if (AnalyticsConfig.debugMode) {
-          print('✓ Session sent successfully');
+          debugPrint('✓ Session sent successfully');
         }
         return true;
       } else {
         if (AnalyticsConfig.debugMode) {
-          print('✗ Session failed: ${response.statusCode} - ${response.body}');
+          debugPrint('✗ Session failed: ${response.statusCode} - ${response.body}');
         }
         return false;
       }
     } catch (e) {
       if (AnalyticsConfig.debugMode) {
-        print('✗ Session error: $e');
+        debugPrint('✗ Session error: $e');
       }
       return false;
     }
@@ -71,18 +71,18 @@ class NetworkService {
 
       if (response.statusCode == 201 || response.statusCode == 207) {
         if (AnalyticsConfig.debugMode) {
-          print('✓ Events sent successfully (${events.length} events)');
+          debugPrint('✓ Events sent successfully (${events.length} events)');
         }
         return true;
       } else {
         if (AnalyticsConfig.debugMode) {
-          print('✗ Events failed: ${response.statusCode} - ${response.body}');
+          debugPrint('✗ Events failed: ${response.statusCode} - ${response.body}');
         }
         return false;
       }
     } catch (e) {
       if (AnalyticsConfig.debugMode) {
-        print('✗ Events error: $e');
+        debugPrint('✗ Events error: $e');
       }
       return false;
     }
@@ -106,18 +106,18 @@ class NetworkService {
 
       if (response.statusCode == 201) {
         if (AnalyticsConfig.debugMode) {
-          print('✓ Error sent successfully');
+          debugPrint('✓ Error sent successfully');
         }
         return true;
       } else {
         if (AnalyticsConfig.debugMode) {
-          print('✗ Error failed: ${response.statusCode} - ${response.body}');
+          debugPrint('✗ Error failed: ${response.statusCode} - ${response.body}');
         }
         return false;
       }
     } catch (e) {
       if (AnalyticsConfig.debugMode) {
-        print('✗ Error sending error: $e');
+        debugPrint('✗ Error sending error: $e');
       }
       return false;
     }
@@ -168,7 +168,7 @@ class NetworkService {
       return response.statusCode == 200;
     } catch (e) {
       if (kDebugMode) {
-        print('Connection test failed: $e');
+        debugPrint('Connection test failed: $e');
       }
       return false;
     }

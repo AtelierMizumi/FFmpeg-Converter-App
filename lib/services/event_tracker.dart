@@ -27,7 +27,7 @@ class EventTracker {
     _eventQueue.add(event);
 
     if (AnalyticsConfig.debugMode) {
-      print(
+      debugPrint(
         'Event queued: ${event.eventType} - ${event.eventName} (${_eventQueue.length} in queue)',
       );
     }
@@ -154,7 +154,7 @@ class EventTracker {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error flushing events: $e');
+        debugPrint('Error flushing events: $e');
       }
       // Re-queue on error
       if (_eventQueue.length < 100) {

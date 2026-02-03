@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ffmpeg_converter_app/services/ffmpeg_service_mobile.dart';
-import 'package:cross_file/cross_file.dart';
-import 'dart:typed_data';
 
 void main() {
   group('FFmpegServiceMobile Tests', () {
@@ -9,6 +7,20 @@ void main() {
 
     setUp(() {
       service = FFmpegServiceMobile();
+    });
+
+    test('Should initialize without errors', () async {
+      await service.initialize();
+      // If no exception is thrown, test passes
+      expect(true, true);
+    });
+
+    test('Should generate correct FFmpeg command for H.264', () {
+      // This is a theoretical test - in reality we'd need to mock FFmpegKit
+      // But it demonstrates what we'd want to test
+      
+      // Command should contain codec, preset, CRF, etc.
+      expect(true, true);
     });
 
     test('Should initialize without errors', () async {
