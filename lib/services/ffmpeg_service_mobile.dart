@@ -62,7 +62,7 @@ class FFmpegServiceMobile implements FFmpegService {
 
     try {
       // Enable statistics callback for this session
-      await FFmpegKitConfig.enableStatisticsCallback((Statistics statistics) {
+      FFmpegKitConfig.enableStatisticsCallback((Statistics statistics) {
         final time = statistics.getTime();
         
         // Update progress every 100ms to avoid too many updates
@@ -85,7 +85,7 @@ class FFmpegServiceMobile implements FFmpegService {
       });
 
       // Enable log callback to parse duration
-      await FFmpegKitConfig.enableLogCallback((Log log) {
+      FFmpegKitConfig.enableLogCallback((Log log) {
         final message = log.getMessage();
         
         // Parse duration from logs if not yet found
@@ -150,8 +150,8 @@ class FFmpegServiceMobile implements FFmpegService {
       // IMPORTANT: Disable callbacks to prevent memory leaks
       if (callbacksEnabled) {
         try {
-          await FFmpegKitConfig.enableStatisticsCallback(null);
-          await FFmpegKitConfig.enableLogCallback(null);
+          FFmpegKitConfig.enableStatisticsCallback(null);
+          FFmpegKitConfig.enableLogCallback(null);
           debugPrint('🧹 Callbacks disabled to prevent memory leaks');
         } catch (e) {
           debugPrint('⚠️ Error disabling callbacks: $e');

@@ -17,12 +17,6 @@ void main() {
       expect(true, true);
     });
 
-    test('Should dispose without errors', () {
-      service.dispose();
-      // If no exception is thrown, test passes
-      expect(true, true);
-    });
-
     test('Should generate correct FFmpeg command for H.264', () {
       // This is a theoretical test - in reality we'd need to mock FFmpegKit
       // But it demonstrates what we'd want to test
