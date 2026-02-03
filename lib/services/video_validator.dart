@@ -1,11 +1,14 @@
+import 'dart:io';
 import 'package:cross_file/cross_file.dart';
 import 'package:flutter/foundation.dart';
 
 class VideoValidator {
   // File size limits:
-  // - Desktop/Mobile: No limit (FFmpeg uses stream processing, doesn't load entire file into RAM)
-  // - Web: 500MB limit (ffmpeg.wasm loads entire file into browser memory)
+  // - Desktop: No limit (FFmpeg uses stream processing, doesn't load entire file into RAM)
+  // - Mobile: 2GB warning (Android may have issues with very large files)
+  // - Web: 500MB hard limit (ffmpeg.wasm loads entire file into browser memory)
   static const maxFileSizeBytesWeb = 500 * 1024 * 1024; // 500MB
+  static const warnFileSizeBytesMobile = 2 * 1024 * 1024 * 1024; // 2GB warning
 
   static const supportedVideoExtensions = [
     'mp4',
@@ -36,11 +39,12 @@ class VideoValidator {
       );
     }
 
-    // Check file size (only for Web platform)
-    // Desktop/Mobile: FFmpeg uses stream processing, no RAM limit needed
-    // Web: ffmpeg.wasm loads entire file into browser memory
+    // Get file size
+    final fileSize = await _getFileSize(file);
+
+    // Check file size based on platform
     if (kIsWeb) {
-      final fileSize = await _getFileSize(file);
+      // Web: Hard limit - ffmpeg.wasm loads entire file into browser memory
       if (fileSize > maxFileSizeBytesWeb) {
         return ValidationResult(
           isValid: false,
@@ -48,8 +52,17 @@ class VideoValidator {
               'File too large for web. Maximum size: ${maxFileSizeBytesWeb ~/ (1024 * 1024)}MB',
         );
       }
+    } else if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      // Mobile: Warning for large files (may cause performance issues)
+      if (fileSize > warnFileSizeBytesMobile) {
+        return ValidationResult(
+          isValid: true,
+          warning:
+              'Large file detected (${formatFileSize(fileSize)}). Conversion may take a long time and use significant battery/storage.',
+        );
+      }
     }
-    // Desktop/Mobile: No file size validation - FFmpeg handles any size via streaming
+    // Desktop: No file size validation - FFmpeg handles any size via streaming
 
     return ValidationResult(isValid: true);
   }
@@ -141,6 +154,8 @@ class VideoValidator {
 class ValidationResult {
   final bool isValid;
   final String? error;
+  final String? warning;
 
-  ValidationResult({required this.isValid, this.error});
+  ValidationResult({required this.isValid, this.error, this.warning});
 }
+

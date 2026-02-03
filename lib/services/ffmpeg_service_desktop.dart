@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:cross_file/cross_file.dart';
@@ -259,4 +260,69 @@ class FFmpegServiceImpl implements FFmpegService {
     _process!.kill(ProcessSignal.sigterm);
     _process = null;
   }
+
+  @override
+  Future<double?> getVideoDuration(XFile videoFile) async {
+    if (_isMobile) {
+      return _mobileService.getVideoDuration(videoFile);
+    }
+
+    try {
+      if (_ffmpegPath == null) await initialize();
+      
+      debugPrint('📊 Getting video duration for: ${videoFile.path}');
+      
+      // Use ffprobe to get duration (ffprobe is bundled with ffmpeg)
+      // Note: ffprobe might not be bundled, so we'll use ffmpeg -i as fallback
+      final args = [
+        '-i', videoFile.path,
+        '-hide_banner',
+      ];
+      
+      final process = await Process.start(_ffmpegPath!, args);
+      
+      Duration? duration;
+      
+      // FFmpeg outputs file info to stderr
+      await for (final line in process.stderr.transform(SystemEncoding().decoder).transform(const LineSplitter())) {
+        // Parse Duration: 00:05:30.12
+        final durMatch = RegExp(r'Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})').firstMatch(line);
+        if (durMatch != null) {
+          try {
+            final h = int.parse(durMatch.group(1)!);
+            final m = int.parse(durMatch.group(2)!);
+            final s = double.parse(durMatch.group(3)!);
+            
+            duration = Duration(
+              hours: h,
+              minutes: m,
+              milliseconds: (s * 1000).toInt(),
+            );
+            
+            // Kill process once we have duration (we don't need to process the file)
+            process.kill(ProcessSignal.sigterm);
+            break;
+          } catch (e) {
+            debugPrint('⚠️ Error parsing duration: $e');
+          }
+        }
+      }
+      
+      // Wait for process to exit
+      await process.exitCode;
+      
+      if (duration != null) {
+        final seconds = duration.inMilliseconds / 1000.0;
+        debugPrint('✅ Video duration: ${seconds.toStringAsFixed(2)}s');
+        return seconds;
+      }
+      
+      debugPrint('⚠️ Could not determine video duration');
+      return null;
+    } catch (e) {
+      debugPrint('❌ Error getting video duration: $e');
+      return null;
+    }
+  }
 }
+

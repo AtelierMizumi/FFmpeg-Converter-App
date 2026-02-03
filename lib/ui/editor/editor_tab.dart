@@ -86,20 +86,50 @@ class _EditorTabState extends State<EditorTab>
         setState(() {
           if (_mode == 'trim') {
             _selectedFile = xFile;
-            // FIXME: This uses a placeholder duration value
-            // To properly implement this, we need to:
-            // 1. Add getVideoDuration() method to FFmpegService interface
-            // 2. Use ffprobe or ffmpeg -i to extract actual video duration
-            // 3. Parse the output and update _totalDurationSeconds
-            // For now, defaulting to 300 seconds (5 minutes) as a reasonable estimate
+            // Initialize with default duration, then fetch actual duration
             _totalDurationSeconds = 300.0;
             _trimRange = RangeValues(0, _totalDurationSeconds);
+            
+            // Fetch actual video duration asynchronously
+            _fetchVideoDuration(xFile!);
           } else {
             _mergeFiles.add(xFile!);
           }
           _outputFile = null;
         });
       }
+    }
+  }
+
+  Future<void> _fetchVideoDuration(XFile videoFile) async {
+    try {
+      debugPrint('🎬 Fetching actual video duration...');
+      final duration = await _ffmpegService.getVideoDuration(videoFile);
+      
+      if (duration != null && duration > 0 && mounted) {
+        setState(() {
+          _totalDurationSeconds = duration;
+          _trimRange = RangeValues(0, duration);
+        });
+        debugPrint('✅ Updated trim range to actual duration: ${duration.toStringAsFixed(2)}s');
+        
+        // Show snackbar to inform user
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Video duration detected: ${(duration / 60).toStringAsFixed(1)} minutes',
+              ),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        debugPrint('⚠️ Could not fetch video duration, using default 300s');
+      }
+    } catch (e) {
+      debugPrint('❌ Error fetching video duration: $e');
+      // Keep default 300s value
     }
   }
 

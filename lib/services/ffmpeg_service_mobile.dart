@@ -56,86 +56,107 @@ class FFmpegServiceMobile implements FFmpegService {
     // Duration parsing state
     Duration? totalDuration;
     int lastStatisticsTime = 0;
+    
+    // Flags to track callback state
+    bool callbacksEnabled = false;
 
-    // Enable statistics callback for this session
-    await FFmpegKitConfig.enableStatisticsCallback((Statistics statistics) {
-      final time = statistics.getTime();
-      
-      // Update progress every 100ms to avoid too many updates
-      if (time - lastStatisticsTime > 100) {
-        lastStatisticsTime = time;
+    try {
+      // Enable statistics callback for this session
+      await FFmpegKitConfig.enableStatisticsCallback((Statistics statistics) {
+        final time = statistics.getTime();
         
-        if (totalDuration != null && onProgress != null) {
-          final currentTimeMs = time;
-          final totalTimeMs = totalDuration!.inMilliseconds;
+        // Update progress every 100ms to avoid too many updates
+        if (time - lastStatisticsTime > 100) {
+          lastStatisticsTime = time;
           
-          if (totalTimeMs > 0) {
-            final progress = (currentTimeMs / totalTimeMs).clamp(0.0, 1.0);
-            onProgress(
-              progress,
-              'Converting... ${(progress * 100).toInt()}%',
-            );
+          if (totalDuration != null && onProgress != null) {
+            final currentTimeMs = time;
+            final totalTimeMs = totalDuration!.inMilliseconds;
+            
+            if (totalTimeMs > 0) {
+              final progress = (currentTimeMs / totalTimeMs).clamp(0.0, 1.0);
+              onProgress(
+                progress,
+                'Converting... ${(progress * 100).toInt()}%',
+              );
+            }
           }
         }
-      }
-    });
+      });
 
-    // Enable log callback to parse duration
-    await FFmpegKitConfig.enableLogCallback((Log log) {
-      final message = log.getMessage();
-      
-      // Parse duration from logs if not yet found
-      if (totalDuration == null && message.contains('Duration:')) {
-        final durMatch = RegExp(
-          r'Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})',
-        ).firstMatch(message);
+      // Enable log callback to parse duration
+      await FFmpegKitConfig.enableLogCallback((Log log) {
+        final message = log.getMessage();
         
-        if (durMatch != null) {
-          try {
-            final h = int.parse(durMatch.group(1)!);
-            final m = int.parse(durMatch.group(2)!);
-            final s = double.parse(durMatch.group(3)!);
-            
-            totalDuration = Duration(
-              hours: h,
-              minutes: m,
-              milliseconds: (s * 1000).toInt(),
-            );
-            
-            debugPrint('📊 Parsed video duration: $totalDuration');
-          } catch (e) {
-            debugPrint('⚠️ Error parsing duration: $e');
+        // Parse duration from logs if not yet found
+        if (totalDuration == null && message.contains('Duration:')) {
+          final durMatch = RegExp(
+            r'Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})',
+          ).firstMatch(message);
+          
+          if (durMatch != null) {
+            try {
+              final h = int.parse(durMatch.group(1)!);
+              final m = int.parse(durMatch.group(2)!);
+              final s = double.parse(durMatch.group(3)!);
+              
+              totalDuration = Duration(
+                hours: h,
+                minutes: m,
+                milliseconds: (s * 1000).toInt(),
+              );
+              
+              debugPrint('📊 Parsed video duration: $totalDuration');
+            } catch (e) {
+              debugPrint('⚠️ Error parsing duration: $e');
+            }
           }
         }
-      }
-    });
-
-    // Execute FFmpeg command
-    final session = await FFmpegKit.execute(command);
-    final returnCode = await session.getReturnCode();
-
-    // Check result
-    if (ReturnCode.isSuccess(returnCode)) {
-      debugPrint('✅ FFmpeg conversion successful!');
-      if (onProgress != null) {
-        onProgress(1.0, 'Completed!');
-      }
+      });
       
-      // Verify output file exists
-      final outputFile = File(outputPath);
-      if (await outputFile.exists()) {
-        return XFile(outputPath);
+      callbacksEnabled = true;
+
+      // Execute FFmpeg command
+      final session = await FFmpegKit.execute(command);
+      final returnCode = await session.getReturnCode();
+
+      // Check result
+      if (ReturnCode.isSuccess(returnCode)) {
+        debugPrint('✅ FFmpeg conversion successful!');
+        if (onProgress != null) {
+          onProgress(1.0, 'Completed!');
+        }
+        
+        // Verify output file exists
+        final outputFile = File(outputPath);
+        if (await outputFile.exists()) {
+          return XFile(outputPath);
+        } else {
+          throw Exception('Output file was not created: $outputPath');
+        }
+      } else if (ReturnCode.isCancel(returnCode)) {
+        debugPrint('⚠️ FFmpeg conversion was cancelled');
+        throw Exception('Conversion was cancelled by user');
       } else {
-        throw Exception('Output file was not created: $outputPath');
+        final output = await session.getOutput();
+        debugPrint('❌ FFmpeg conversion failed with return code: $returnCode');
+        debugPrint('Error output: $output');
+        throw Exception('FFmpeg conversion failed: $output');
       }
-    } else if (ReturnCode.isCancel(returnCode)) {
-      debugPrint('⚠️ FFmpeg conversion was cancelled');
-      throw Exception('Conversion was cancelled by user');
-    } else {
-      final output = await session.getOutput();
-      debugPrint('❌ FFmpeg conversion failed with return code: $returnCode');
-      debugPrint('Error output: $output');
-      throw Exception('FFmpeg conversion failed: $output');
+    } catch (e) {
+      debugPrint('❌ Error during conversion: $e');
+      rethrow;
+    } finally {
+      // IMPORTANT: Disable callbacks to prevent memory leaks
+      if (callbacksEnabled) {
+        try {
+          await FFmpegKitConfig.enableStatisticsCallback(null);
+          await FFmpegKitConfig.enableLogCallback(null);
+          debugPrint('🧹 Callbacks disabled to prevent memory leaks');
+        } catch (e) {
+          debugPrint('⚠️ Error disabling callbacks: $e');
+        }
+      }
     }
   }
 
@@ -186,5 +207,37 @@ class FFmpegServiceMobile implements FFmpegService {
     debugPrint('🛑 Cancelling all FFmpeg sessions...');
     await FFmpegKit.cancel();
     debugPrint('✅ All FFmpeg sessions cancelled');
+  }
+
+  @override
+  Future<double?> getVideoDuration(XFile videoFile) async {
+    try {
+      debugPrint('📊 Getting video duration for: ${videoFile.path}');
+      
+      // Use FFprobe to get duration
+      // Command: ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 input.mp4
+      final command = '-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${videoFile.path}"';
+      
+      final session = await FFmpegKit.execute(command);
+      final output = await session.getOutput();
+      final returnCode = await session.getReturnCode();
+      
+      if (ReturnCode.isSuccess(returnCode) && output != null) {
+        // Parse duration from output
+        final durationStr = output.trim();
+        final duration = double.tryParse(durationStr);
+        
+        if (duration != null && duration > 0) {
+          debugPrint('✅ Video duration: ${duration.toStringAsFixed(2)}s');
+          return duration;
+        }
+      }
+      
+      debugPrint('⚠️ Could not determine video duration from FFprobe output');
+      return null;
+    } catch (e) {
+      debugPrint('❌ Error getting video duration: $e');
+      return null;
+    }
   }
 }
