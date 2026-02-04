@@ -46,7 +46,17 @@ class _EditorTabState extends State<EditorTab>
   @override
   void initState() {
     super.initState();
-    _ffmpegService.initialize();
+    _initializeFFmpeg();
+  }
+
+  Future<void> _initializeFFmpeg() async {
+    try {
+      await _ffmpegService.initialize();
+    } catch (e) {
+      // FFmpeg initialization may fail on unsupported platforms (e.g., macOS without bundled binary)
+      // This is OK - the user will see an error when they try to process
+      debugPrint('FFmpeg initialization warning: $e');
+    }
   }
 
   // --- File Picking ---
