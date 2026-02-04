@@ -1,4 +1,3 @@
-import 'dart:io' show Platform;
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import dotenv
 import 'package:flutter/foundation.dart'; // Add this for kIsWeb
 import 'package:flutter/material.dart';
@@ -42,13 +41,13 @@ class FFmpegConverterApp extends StatefulWidget {
   const FFmpegConverterApp({super.key});
 
   @override
-  State<FFmpegConverterApp> createState() => _FFmpegConverterAppState();
+  State<FFmpegConverterApp> createState() => FFmpegConverterAppState();
 
-  static _FFmpegConverterAppState? of(BuildContext context) =>
-      context.findAncestorStateOfType<_FFmpegConverterAppState>();
+  static FFmpegConverterAppState? of(BuildContext context) =>
+      context.findAncestorStateOfType<FFmpegConverterAppState>();
 }
 
-class _FFmpegConverterAppState extends State<FFmpegConverterApp>
+class FFmpegConverterAppState extends State<FFmpegConverterApp>
     with WidgetsBindingObserver {
   // Use English as default locale for international users
   // Users can change language via the language selector in the app

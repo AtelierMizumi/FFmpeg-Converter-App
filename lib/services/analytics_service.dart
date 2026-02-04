@@ -27,7 +27,7 @@ class AnalyticsService {
 
     if (!AnalyticsConfig.enabled) {
       if (kDebugMode) {
-        print('Analytics disabled in config');
+        debugPrint('Analytics disabled in config');
       }
       return;
     }
@@ -36,7 +36,7 @@ class AnalyticsService {
 
     try {
       if (AnalyticsConfig.debugMode) {
-        print('Initializing analytics...');
+        debugPrint('Initializing analytics...');
       }
 
       // Setup error handlers
@@ -103,15 +103,15 @@ class AnalyticsService {
       _isInitialized = true;
 
       if (AnalyticsConfig.debugMode) {
-        print('✓ Analytics initialized successfully');
-        print('  Session ID: $sessionId');
-        print('  User ID Hash: ${userIdHash.substring(0, 8)}...');
-        print('  First Launch: $isFirstLaunch');
-        print('  Launch Count: $launchCount');
+        debugPrint('✓ Analytics initialized successfully');
+        debugPrint('  Session ID: $sessionId');
+        debugPrint('  User ID Hash: ${userIdHash.substring(0, 8)}...');
+        debugPrint('  First Launch: $isFirstLaunch');
+        debugPrint('  Launch Count: $launchCount');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Failed to initialize analytics: $e');
+        debugPrint('Failed to initialize analytics: $e');
       }
     }
   }
@@ -144,7 +144,7 @@ class AnalyticsService {
   Future<void> clearAllData() async {
     await _sessionManager.clearAll();
     if (AnalyticsConfig.debugMode) {
-      print('Analytics data cleared');
+      debugPrint('Analytics data cleared');
     }
   }
 
