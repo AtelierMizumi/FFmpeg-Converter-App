@@ -128,11 +128,19 @@ if (-not $Quick) {
 
 # Step 7: Build check (optional in quick mode)
 if (-not $Quick) {
-    Write-Step "Checking if project builds..."
-    # Just check that we can generate necessary files, don't do full build
-    $buildCheckOutput = flutter pub run build_runner build --delete-conflicting-outputs 2>&1
-    # This might fail if no build_runner, which is fine
-    Write-Info "Build check completed (warnings are OK)"
+    Write-Step "Verifying project structure..."
+    # Check that key files exist
+    $requiredFiles = @("pubspec.yaml", "lib/main.dart", "test/widget_test.dart")
+    $allExist = $true
+    foreach ($file in $requiredFiles) {
+        if (-not (Test-Path $file)) {
+            Write-Failure "Missing required file: $file"
+            $allExist = $false
+        }
+    }
+    if ($allExist) {
+        Write-Success "Project structure OK"
+    }
 }
 
 # Summary
