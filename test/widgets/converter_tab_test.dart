@@ -140,7 +140,8 @@ void main() {
       expect(initialSlider.value, greaterThanOrEqualTo(0));
 
       // Drag slider to change value
-      await tester.drag(slider, const Offset(100, 0));
+      // Note: warnIfMissed is false because slider may be off-screen in test environment
+      await tester.drag(slider, const Offset(100, 0), warnIfMissed: false);
       await tester.pumpAndSettle();
 
       // Get new value
@@ -184,14 +185,23 @@ void main() {
       await tester.pumpWidget(const FFmpegConverterApp());
       await tester.pumpAndSettle();
 
-      // Find and tap the Editor tab (from app_en.arb: "tabEditor")
-      final editorTab = find.text('Editor');
+      // Find tabs by looking for Tab widgets with specific text
+      // This is more reliable than just finding text which might find multiple matches
+      final tabBar = find.byType(TabBar);
+      expect(tabBar, findsOneWidget);
+
+      // Find the Editor tab within the TabBar - use byWidgetPredicate for robustness
+      final editorTab = find.byWidgetPredicate(
+        (widget) => widget is Tab && widget.text == 'Editor',
+      );
       expect(editorTab, findsOneWidget);
       await tester.tap(editorTab);
       await tester.pumpAndSettle();
 
-      // Find and tap the Converter tab (from app_en.arb: "tabConverter")
-      final converterTab = find.text('Converter');
+      // Find the Converter tab within the TabBar
+      final converterTab = find.byWidgetPredicate(
+        (widget) => widget is Tab && widget.text == 'Converter',
+      );
       expect(converterTab, findsOneWidget);
       await tester.tap(converterTab);
       await tester.pumpAndSettle();
