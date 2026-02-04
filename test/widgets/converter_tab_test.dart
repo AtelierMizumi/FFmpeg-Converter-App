@@ -7,43 +7,40 @@ void main() {
   group('ConverterTab Widget Tests', () {
     testWidgets('Should display all UI elements', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ConverterTab(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ConverterTab())),
       );
 
       // Check for file picker button
       expect(find.text('Select Video File'), findsOneWidget);
-      
+
       // Check for output format dropdown
       expect(find.text('Output Format'), findsOneWidget);
-      
+
       // Check for codec dropdown
       expect(find.text('Video Codec'), findsOneWidget);
-      
+
       // Check for bitrate field
       expect(find.text('Video Bitrate'), findsOneWidget);
-      
+
       // Check for resolution field
       expect(find.text('Resolution'), findsOneWidget);
-      
+
       // Check for CRF slider
       expect(find.text('CRF Quality'), findsOneWidget);
     });
 
-    testWidgets('Convert button should be disabled initially', (WidgetTester tester) async {
+    testWidgets('Convert button should be disabled initially', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ConverterTab(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ConverterTab())),
       );
 
       // Find convert button
-      final convertButton = find.widgetWithText(ElevatedButton, 'Convert Video');
+      final convertButton = find.widgetWithText(
+        ElevatedButton,
+        'Convert Video',
+      );
       expect(convertButton, findsOneWidget);
 
       // Check if button is disabled (onPressed should be null)
@@ -51,13 +48,11 @@ void main() {
       expect(button.onPressed, isNull);
     });
 
-    testWidgets('CRF slider should have correct range for H.264', (WidgetTester tester) async {
+    testWidgets('CRF slider should have correct range for H.264', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ConverterTab(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ConverterTab())),
       );
 
       // Find the CRF slider
@@ -70,13 +65,11 @@ void main() {
       expect(sliderWidget.max, equals(51)); // H.264/H.265 max CRF
     });
 
-    testWidgets('Format dropdown should contain valid formats', (WidgetTester tester) async {
+    testWidgets('Format dropdown should contain valid formats', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ConverterTab(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ConverterTab())),
       );
 
       // Tap on output format dropdown
@@ -89,13 +82,11 @@ void main() {
       expect(find.text('mkv').hitTestable(), findsWidgets);
     });
 
-    testWidgets('Codec dropdown should contain valid codecs', (WidgetTester tester) async {
+    testWidgets('Codec dropdown should contain valid codecs', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ConverterTab(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ConverterTab())),
       );
 
       // Tap on codec dropdown
@@ -108,13 +99,11 @@ void main() {
       expect(find.text('VP9 (libvpx-vp9)').hitTestable(), findsWidgets);
     });
 
-    testWidgets('Should show error for invalid bitrate', (WidgetTester tester) async {
+    testWidgets('Should show error for invalid bitrate', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ConverterTab(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ConverterTab())),
       );
 
       // Find bitrate text field
@@ -130,13 +119,11 @@ void main() {
       expect(find.text('invalid'), findsOneWidget);
     });
 
-    testWidgets('Should show error for invalid resolution', (WidgetTester tester) async {
+    testWidgets('Should show error for invalid resolution', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ConverterTab(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ConverterTab())),
       );
 
       // Find resolution text field
@@ -155,11 +142,7 @@ void main() {
   group('ConverterTab State Tests', () {
     testWidgets('CRF slider value should update', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ConverterTab(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ConverterTab())),
       );
 
       // Find CRF slider
@@ -182,13 +165,11 @@ void main() {
       expect(updatedValue, isNot(equals(initialValue)));
     });
 
-    testWidgets('Changing codec should update CRF slider range', (WidgetTester tester) async {
+    testWidgets('Changing codec should update CRF slider range', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ConverterTab(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ConverterTab())),
       );
 
       // Initial slider should have H.264 range (0-51)
@@ -208,7 +189,9 @@ void main() {
   });
 
   group('ConverterTab Integration with MainScreen', () {
-    testWidgets('ConverterTab should be accessible from MainScreen', (WidgetTester tester) async {
+    testWidgets('ConverterTab should be accessible from MainScreen', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(const FFmpegConverterApp());
       await tester.pumpAndSettle();
 
@@ -219,7 +202,9 @@ void main() {
       expect(find.byType(ConverterTab), findsOneWidget);
     });
 
-    testWidgets('Should switch to ConverterTab when tapped', (WidgetTester tester) async {
+    testWidgets('Should switch to ConverterTab when tapped', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(const FFmpegConverterApp());
       await tester.pumpAndSettle();
 

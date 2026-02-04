@@ -33,7 +33,9 @@ class NetworkService {
         return true;
       } else {
         if (AnalyticsConfig.debugMode) {
-          debugPrint('✗ Session failed: ${response.statusCode} - ${response.body}');
+          debugPrint(
+            '✗ Session failed: ${response.statusCode} - ${response.body}',
+          );
         }
         return false;
       }
@@ -76,7 +78,9 @@ class NetworkService {
         return true;
       } else {
         if (AnalyticsConfig.debugMode) {
-          debugPrint('✗ Events failed: ${response.statusCode} - ${response.body}');
+          debugPrint(
+            '✗ Events failed: ${response.statusCode} - ${response.body}',
+          );
         }
         return false;
       }
@@ -111,7 +115,9 @@ class NetworkService {
         return true;
       } else {
         if (AnalyticsConfig.debugMode) {
-          debugPrint('✗ Error failed: ${response.statusCode} - ${response.body}');
+          debugPrint(
+            '✗ Error failed: ${response.statusCode} - ${response.body}',
+          );
         }
         return false;
       }

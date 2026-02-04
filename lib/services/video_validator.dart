@@ -158,4 +158,3 @@ class ValidationResult {
 
   ValidationResult({required this.isValid, this.error, this.warning});
 }
-

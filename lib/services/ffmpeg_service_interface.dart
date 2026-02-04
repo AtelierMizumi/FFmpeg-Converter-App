@@ -4,7 +4,7 @@ typedef ProgressCallback = void Function(double progress, String message);
 
 abstract class FFmpegService {
   Future<void> initialize();
-  
+
   Future<XFile?> convertVideo(
     XFile input,
     List<String> args,
@@ -20,9 +20,8 @@ abstract class FFmpegService {
   });
 
   Future<void> cancel();
-  
+
   /// Get video duration in seconds
   /// Returns null if duration cannot be determined
   Future<double?> getVideoDuration(XFile videoFile);
 }
-

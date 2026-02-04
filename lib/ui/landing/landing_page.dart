@@ -61,7 +61,7 @@ class LandingPage extends StatelessWidget {
           Text(
             'Convert videos instantly. No internet required for desktop app.\nFast, private, and open source.',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
             ),
             textAlign: TextAlign.center,
           ),
