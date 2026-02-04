@@ -185,25 +185,31 @@ void main() {
       await tester.pumpWidget(const FFmpegConverterApp());
       await tester.pumpAndSettle();
 
-      // Find tabs by looking for Tab widgets with specific text
-      // This is more reliable than just finding text which might find multiple matches
+      // Find tabs by their icons - this is more reliable across platforms
+      // Icons defined in main.dart: transform (Converter), edit_note (Editor)
       final tabBar = find.byType(TabBar);
       expect(tabBar, findsOneWidget);
 
-      // Find the Editor tab within the TabBar - use byWidgetPredicate for robustness
-      final editorTab = find.byWidgetPredicate(
-        (widget) => widget is Tab && widget.text == 'Editor',
+      // Find the Editor tab by its icon (edit_note) and tap it
+      final editorTabIcon = find.descendant(
+        of: tabBar,
+        matching: find.byIcon(Icons.edit_note),
       );
-      expect(editorTab, findsOneWidget);
-      await tester.tap(editorTab);
+      expect(editorTabIcon, findsOneWidget);
+      await tester.tap(editorTabIcon);
+      await tester.pump(); // Initial frame
+      await tester.pump(const Duration(milliseconds: 300)); // Animation
       await tester.pumpAndSettle();
 
-      // Find the Converter tab within the TabBar
-      final converterTab = find.byWidgetPredicate(
-        (widget) => widget is Tab && widget.text == 'Converter',
+      // Find the Converter tab by its icon (transform) and tap it
+      final converterTabIcon = find.descendant(
+        of: tabBar,
+        matching: find.byIcon(Icons.transform),
       );
-      expect(converterTab, findsOneWidget);
-      await tester.tap(converterTab);
+      expect(converterTabIcon, findsOneWidget);
+      await tester.tap(converterTabIcon);
+      await tester.pump(); // Initial frame
+      await tester.pump(const Duration(milliseconds: 300)); // Animation
       await tester.pumpAndSettle();
 
       // ConverterTab should be visible
