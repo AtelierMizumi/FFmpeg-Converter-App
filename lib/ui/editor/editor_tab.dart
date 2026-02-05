@@ -374,6 +374,9 @@ class _EditorTabState extends State<EditorTab>
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Responsive: use Row for wide screens, Column for narrow screens
+        final isWide = constraints.maxWidth > 700;
+
         return Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -399,107 +402,115 @@ class _EditorTabState extends State<EditorTab>
               ),
               const Gap(24),
 
-              // Main Content Area
+              // Main Content Area - Responsive layout
               Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: _mode == 'trim'
-                          ? _buildTrimControls()
-                          : _buildMergeControls(),
-                    ),
-                    const Gap(32),
-                    // Actions Panel
-                    Expanded(
-                      flex: 2,
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                l10n.sectionSettings,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              const Gap(16),
-                              if (isDesktop) ...[
-                                InkWell(
-                                  onTap: _pickOutputDirectory,
-                                  child: InputDecorator(
-                                    decoration: InputDecoration(
-                                      labelText: l10n.pickOutputFolder,
-                                      border: const OutlineInputBorder(),
-                                    ),
-                                    child: Text(
-                                      _outputDirectory ?? l10n.notSelected,
-                                    ),
-                                  ),
-                                ),
-                                const Gap(16),
-                              ],
-
-                              if (_isProcessing) ...[
-                                LinearProgressIndicator(value: _progress),
-                                const Gap(8),
-                                Text(
-                                  _statusMessage,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ] else ...[
-                                FilledButton.icon(
-                                  onPressed: _mode == 'trim'
-                                      ? (_selectedFile != null
-                                            ? _processTrim
-                                            : null)
-                                      : null, // Merge not impl yet
-                                  icon: const Icon(Icons.play_arrow),
-                                  label: Text(
-                                    _mode == 'trim'
-                                        ? l10n.processTrim
-                                        : l10n.processMerge,
-                                  ),
-                                ),
-                              ],
-
-                              if (_outputFile != null) ...[
-                                const Gap(24),
-                                const Divider(),
-                                const Gap(16),
-                                Text(
-                                  l10n.statusSuccess,
-                                  style: const TextStyle(color: Colors.green),
-                                ),
-                                const Gap(8),
-                                FilledButton.icon(
-                                  onPressed: _saveOutput,
-                                  icon: const Icon(Icons.save),
-                                  label: Text(l10n.saveOutput),
-                                ),
-                                if (isDesktop) ...[
-                                  const Gap(8),
-                                  OutlinedButton.icon(
-                                    onPressed: () =>
-                                        OpenFile.open(_outputFile!.path),
-                                    icon: const Icon(Icons.open_in_new),
-                                    label: const Text('Open Video'),
-                                  ),
-                                ],
-                              ],
-                            ],
+                child: isWide
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: _mode == 'trim'
+                                ? _buildTrimControls()
+                                : _buildMergeControls(),
                           ),
+                          const Gap(32),
+                          Expanded(
+                            flex: 2,
+                            child: _buildActionsPanel(l10n, isDesktop),
+                          ),
+                        ],
+                      )
+                    : SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _mode == 'trim'
+                                ? _buildTrimControls()
+                                : _buildMergeControls(),
+                            const Gap(24),
+                            _buildActionsPanel(l10n, isDesktop),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
         );
       },
+    );
+  }
+
+  /// Extracted Actions Panel for reuse in both layouts
+  Widget _buildActionsPanel(AppLocalizations l10n, bool isDesktop) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.sectionSettings,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const Gap(16),
+            if (isDesktop) ...[
+              InkWell(
+                onTap: _pickOutputDirectory,
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: l10n.pickOutputFolder,
+                    border: const OutlineInputBorder(),
+                  ),
+                  child: Text(_outputDirectory ?? l10n.notSelected),
+                ),
+              ),
+              const Gap(16),
+            ],
+
+            if (_isProcessing) ...[
+              LinearProgressIndicator(value: _progress),
+              const Gap(8),
+              Text(_statusMessage, textAlign: TextAlign.center),
+            ] else ...[
+              FilledButton.icon(
+                onPressed: _mode == 'trim'
+                    ? (_selectedFile != null ? _processTrim : null)
+                    : null, // Merge not impl yet
+                icon: const Icon(Icons.play_arrow),
+                label: Text(
+                  _mode == 'trim' ? l10n.processTrim : l10n.processMerge,
+                ),
+              ),
+            ],
+
+            if (_outputFile != null) ...[
+              const Gap(24),
+              const Divider(),
+              const Gap(16),
+              Text(
+                l10n.statusSuccess,
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
+              const Gap(8),
+              FilledButton.icon(
+                onPressed: _saveOutput,
+                icon: const Icon(Icons.save),
+                label: Text(l10n.saveOutput),
+              ),
+              if (isDesktop) ...[
+                const Gap(8),
+                OutlinedButton.icon(
+                  onPressed: () => OpenFile.open(_outputFile!.path),
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text('Open Video'),
+                ),
+              ],
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

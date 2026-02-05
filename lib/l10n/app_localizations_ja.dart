@@ -15,7 +15,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tabConverter => '変換';
 
   @override
-  String get tabEditor => 'Editor';
+  String get tabEditor => '編集';
 
   @override
   String get tabGuide => 'ガイド';
@@ -158,32 +158,35 @@ class AppLocalizationsJa extends AppLocalizations {
   String get librariesLicenses => 'サードパーティライブラリとライセンス';
 
   @override
-  String get trimVideo => 'Trim Video';
+  String get trimVideo => '動画のトリミング';
 
   @override
-  String get mergeVideo => 'Merge Video';
+  String get mergeVideo => '動画の結合';
 
   @override
-  String get startTime => 'Start Time';
+  String get startTime => '開始時間';
 
   @override
-  String get endTime => 'End Time';
+  String get endTime => '終了時間';
 
   @override
-  String get addClip => 'Add Clip';
+  String get addClip => 'クリップを追加';
 
   @override
-  String get processMerge => 'Process Merge';
+  String get processMerge => '結合処理';
 
   @override
-  String get processTrim => 'Process Trim';
+  String get processTrim => 'トリミング処理';
 
   @override
-  String get editorMode => 'Editor Mode';
+  String get editorMode => '編集モード';
 
   @override
-  String get modeTrim => 'Trim Mode';
+  String get modeTrim => 'トリミングモード';
 
   @override
-  String get modeMerge => 'Merge Mode';
+  String get modeMerge => '結合モード';
+
+  @override
+  String get initializingFFmpeg => 'FFmpegを初期化中...';
 }

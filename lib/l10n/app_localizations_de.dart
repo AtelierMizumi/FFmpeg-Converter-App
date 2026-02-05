@@ -161,32 +161,35 @@ class AppLocalizationsDe extends AppLocalizations {
   String get librariesLicenses => 'Drittanbieter-Bibliotheken & Lizenzen';
 
   @override
-  String get trimVideo => 'Trim Video';
+  String get trimVideo => 'Video schneiden';
 
   @override
-  String get mergeVideo => 'Merge Video';
+  String get mergeVideo => 'Videos zusammenfügen';
 
   @override
-  String get startTime => 'Start Time';
+  String get startTime => 'Startzeit';
 
   @override
-  String get endTime => 'End Time';
+  String get endTime => 'Endzeit';
 
   @override
-  String get addClip => 'Add Clip';
+  String get addClip => 'Clip hinzufügen';
 
   @override
-  String get processMerge => 'Process Merge';
+  String get processMerge => 'Zusammenfügen';
 
   @override
-  String get processTrim => 'Process Trim';
+  String get processTrim => 'Schneiden';
 
   @override
-  String get editorMode => 'Editor Mode';
+  String get editorMode => 'Editor-Modus';
 
   @override
-  String get modeTrim => 'Trim Mode';
+  String get modeTrim => 'Schneidemodus';
 
   @override
-  String get modeMerge => 'Merge Mode';
+  String get modeMerge => 'Zusammenfügemodus';
+
+  @override
+  String get initializingFFmpeg => 'FFmpeg wird initialisiert...';
 }

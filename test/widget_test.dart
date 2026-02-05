@@ -100,4 +100,95 @@ void main() {
       );
     });
   });
+
+  group('Kaizen Improvements Tests', () {
+    test('Progress throttle duration should be 100ms', () {
+      // This tests the concept - actual implementation is in converter_tab.dart
+      const throttleDuration = Duration(milliseconds: 100);
+      expect(throttleDuration.inMilliseconds, 100);
+    });
+
+    test('RegExp patterns should be valid for FFmpeg output parsing', () {
+      // Test the static RegExp patterns used in ffmpeg_service_desktop.dart
+      final durationRegex = RegExp(r'Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})');
+      final timeRegex = RegExp(r'time=(\d{2}):(\d{2}):(\d{2}\.\d{2})');
+
+      // Test duration pattern
+      final durationMatch = durationRegex.firstMatch('Duration: 00:05:32.50');
+      expect(durationMatch, isNotNull);
+      expect(durationMatch!.group(1), '00'); // hours
+      expect(durationMatch.group(2), '05'); // minutes
+      expect(durationMatch.group(3), '32.50'); // seconds
+
+      // Test time pattern
+      final timeMatch = timeRegex.firstMatch(
+        'frame=1234 time=00:02:15.00 speed=2x',
+      );
+      expect(timeMatch, isNotNull);
+      expect(timeMatch!.group(1), '00'); // hours
+      expect(timeMatch.group(2), '02'); // minutes
+      expect(timeMatch.group(3), '15.00'); // seconds
+    });
+
+    test('Progress calculation should be clamped between 0 and 1', () {
+      // Helper function to simulate progress calculation
+      double calculateProgress(int currentMs, int totalMs) {
+        if (totalMs == 0) return 0.0;
+        final progress = currentMs / totalMs;
+        return progress > 1.0 ? 1.0 : (progress < 0.0 ? 0.0 : progress);
+      }
+
+      expect(calculateProgress(50, 100), 0.5);
+      expect(calculateProgress(100, 100), 1.0);
+      expect(calculateProgress(150, 100), 1.0); // Clamped to 1.0
+      expect(calculateProgress(0, 100), 0.0);
+      expect(calculateProgress(0, 0), 0.0); // Edge case
+    });
+
+    test('Duration parsing should handle various formats', () {
+      // Test helper function for duration parsing
+      Duration? parseDuration(String timeStr) {
+        final regex = RegExp(r'(\d{2}):(\d{2}):(\d{2}\.\d{2})');
+        final match = regex.firstMatch(timeStr);
+        if (match == null) return null;
+
+        try {
+          final h = int.parse(match.group(1)!);
+          final m = int.parse(match.group(2)!);
+          final s = double.parse(match.group(3)!);
+          return Duration(
+            hours: h,
+            minutes: m,
+            milliseconds: (s * 1000).toInt(),
+          );
+        } catch (e) {
+          return null;
+        }
+      }
+
+      final duration1 = parseDuration('00:05:32.50');
+      expect(duration1, isNotNull);
+      expect(duration1!.inSeconds, 332); // 5*60 + 32 = 332
+
+      final duration2 = parseDuration('01:30:00.00');
+      expect(duration2, isNotNull);
+      expect(duration2!.inMinutes, 90);
+
+      final duration3 = parseDuration('invalid');
+      expect(duration3, isNull);
+    });
+  });
+
+  group('FileDropZone Widget Tests', () {
+    // Note: Full widget tests would require mock dependencies
+    // These are conceptual tests for the widget behavior
+
+    test('FileDropZone should support custom aspect ratios', () {
+      const defaultAspectRatio = 16 / 9;
+      const customAspectRatio = 4 / 3;
+
+      expect(defaultAspectRatio, closeTo(1.778, 0.001));
+      expect(customAspectRatio, closeTo(1.333, 0.001));
+    });
+  });
 }

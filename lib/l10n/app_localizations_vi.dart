@@ -188,4 +188,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get modeMerge => 'Chế độ Ghép';
+
+  @override
+  String get initializingFFmpeg => 'Đang khởi tạo FFmpeg...';
 }

@@ -43,5 +43,17 @@
   "sectionReferences": "Referenzen",
   "developedBy": "Entwickelt von",
   "technologies": "Verwendete Technologien",
-  "librariesLicenses": "Drittanbieter-Bibliotheken & Lizenzen"
+  "librariesLicenses": "Drittanbieter-Bibliotheken & Lizenzen",
+  "tabEditor": "Editor",
+  "trimVideo": "Video schneiden",
+  "mergeVideo": "Videos zusammenfügen",
+  "startTime": "Startzeit",
+  "endTime": "Endzeit",
+  "addClip": "Clip hinzufügen",
+  "processMerge": "Zusammenfügen",
+  "processTrim": "Schneiden",
+  "editorMode": "Editor-Modus",
+  "modeTrim": "Schneidemodus",
+  "modeMerge": "Zusammenfügemodus",
+  "initializingFFmpeg": "FFmpeg wird initialisiert..."
 }

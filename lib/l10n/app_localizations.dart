@@ -437,6 +437,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Merge Mode'**
   String get modeMerge;
+
+  /// No description provided for @initializingFFmpeg.
+  ///
+  /// In en, this message translates to:
+  /// **'Initializing FFmpeg...'**
+  String get initializingFFmpeg;
 }
 
 class _AppLocalizationsDelegate
