@@ -1,9 +1,14 @@
+import 'dart:io';
 import 'package:cross_file/cross_file.dart';
+import 'package:flutter/foundation.dart';
 
 class VideoValidator {
-  static const maxFileSizeBytesDesktop = 2 * 1024 * 1024 * 1024; // 2GB
-  static const maxFileSizeBytesMobile = 500 * 1024 * 1024; // 500MB
-  static const maxFileSizeBytesWeb = 200 * 1024 * 1024; // 200MB
+  // File size limits:
+  // - Desktop: No limit (FFmpeg uses stream processing, doesn't load entire file into RAM)
+  // - Mobile: 2GB warning (Android may have issues with very large files)
+  // - Web: 500MB hard limit (ffmpeg.wasm loads entire file into browser memory)
+  static const maxFileSizeBytesWeb = 500 * 1024 * 1024; // 500MB
+  static const warnFileSizeBytesMobile = 2 * 1024 * 1024 * 1024; // 2GB warning
 
   static const supportedVideoExtensions = [
     'mp4',
@@ -34,15 +39,30 @@ class VideoValidator {
       );
     }
 
-    // Check file size
+    // Get file size
     final fileSize = await _getFileSize(file);
-    if (fileSize > maxFileSizeBytesDesktop) {
-      return ValidationResult(
-        isValid: false,
-        error:
-            'File too large. Maximum size: ${maxFileSizeBytesDesktop ~/ (1024 * 1024)}MB',
-      );
+
+    // Check file size based on platform
+    if (kIsWeb) {
+      // Web: Hard limit - ffmpeg.wasm loads entire file into browser memory
+      if (fileSize > maxFileSizeBytesWeb) {
+        return ValidationResult(
+          isValid: false,
+          error:
+              'File too large for web. Maximum size: ${maxFileSizeBytesWeb ~/ (1024 * 1024)}MB',
+        );
+      }
+    } else if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      // Mobile: Warning for large files (may cause performance issues)
+      if (fileSize > warnFileSizeBytesMobile) {
+        return ValidationResult(
+          isValid: true,
+          warning:
+              'Large file detected (${formatFileSize(fileSize)}). Conversion may take a long time and use significant battery/storage.',
+        );
+      }
     }
+    // Desktop: No file size validation - FFmpeg handles any size via streaming
 
     return ValidationResult(isValid: true);
   }
@@ -62,19 +82,17 @@ class VideoValidator {
       return ValidationResult(isValid: true);
     }
 
-    if (crf < 0 || crf > 51) {
-      return ValidationResult(
-        isValid: false,
-        error: 'CRF must be between 0 and 51',
-      );
-    }
-
     // Codec-specific ranges
     if (codec.contains('264') || codec.contains('265')) {
+      // H.264 and H.265 support CRF 0-51
       if (crf < 0 || crf > 51) {
-        return ValidationResult(isValid: true);
+        return ValidationResult(
+          isValid: false,
+          error: 'H.264/H.265 CRF must be between 0 and 51',
+        );
       }
     } else if (codec.contains('vp9')) {
+      // VP9 supports CRF 0-63
       if (crf < 0 || crf > 63) {
         return ValidationResult(
           isValid: false,
@@ -82,6 +100,7 @@ class VideoValidator {
         );
       }
     } else if (codec.contains('av1')) {
+      // AV1 supports CRF 0-63
       if (crf < 0 || crf > 63) {
         return ValidationResult(
           isValid: false,
@@ -93,6 +112,20 @@ class VideoValidator {
       // For simplicity we allow the standard range but warn or map internally if needed.
       // But -crf doesn't always work for mpeg4, usually it's -q:v.
       // FFmpegService might need to handle this mapping.
+      if (crf < 0 || crf > 51) {
+        return ValidationResult(
+          isValid: false,
+          error: 'MPEG-4 CRF/qscale should be between 0 and 51',
+        );
+      }
+    } else {
+      // Default validation for unknown codecs - use standard range 0-51
+      if (crf < 0 || crf > 51) {
+        return ValidationResult(
+          isValid: false,
+          error: 'CRF must be between 0 and 51',
+        );
+      }
     }
 
     return ValidationResult(isValid: true);
@@ -121,6 +154,7 @@ class VideoValidator {
 class ValidationResult {
   final bool isValid;
   final String? error;
+  final String? warning;
 
-  ValidationResult({required this.isValid, this.error});
+  ValidationResult({required this.isValid, this.error, this.warning});
 }

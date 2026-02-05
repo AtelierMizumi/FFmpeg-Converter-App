@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart'; // Add this for kIsWeb
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:media_kit/media_kit.dart';
-import 'package:flutter_test_application/l10n/app_localizations.dart';
+import 'package:ffmpeg_converter_app/l10n/app_localizations.dart';
 import 'ui/landing/landing_page.dart';
 import 'ui/tabs/converter_tab.dart';
 import 'ui/editor/editor_tab.dart';
@@ -41,17 +41,17 @@ class FFmpegConverterApp extends StatefulWidget {
   const FFmpegConverterApp({super.key});
 
   @override
-  State<FFmpegConverterApp> createState() => _FFmpegConverterAppState();
+  State<FFmpegConverterApp> createState() => FFmpegConverterAppState();
 
-  static _FFmpegConverterAppState? of(BuildContext context) =>
-      context.findAncestorStateOfType<_FFmpegConverterAppState>();
+  static FFmpegConverterAppState? of(BuildContext context) =>
+      context.findAncestorStateOfType<FFmpegConverterAppState>();
 }
 
-class _FFmpegConverterAppState extends State<FFmpegConverterApp>
+class FFmpegConverterAppState extends State<FFmpegConverterApp>
     with WidgetsBindingObserver {
-  Locale _locale = const Locale(
-    'vi',
-  ); // Default VI as requested by context cues (Vietnamese user)
+  // Use English as default locale for international users
+  // Users can change language via the language selector in the app
+  Locale _locale = const Locale('en');
 
   @override
   void initState() {
@@ -121,8 +121,19 @@ class _FFmpegConverterAppState extends State<FFmpegConverterApp>
         Locale('ja'), // Japanese
         Locale('de'), // German
       ],
-      home: kIsWeb ? const LandingPage() : const MainScreen(),
+      home: _getHomePage(),
     );
+  }
+
+  Widget _getHomePage() {
+    // Web: Show landing page with browser-based conversion
+    if (kIsWeb) {
+      return const LandingPage();
+    }
+
+    // Desktop (Windows/Linux/macOS) and Mobile (Android/iOS): Show main app
+    // Mobile support is now enabled via ffmpeg_kit_flutter_new package
+    return const MainScreen();
   }
 }
 

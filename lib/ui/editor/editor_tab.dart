@@ -8,7 +8,7 @@ import 'package:gap/gap.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:open_file/open_file.dart';
-import 'package:flutter_test_application/l10n/app_localizations.dart';
+import 'package:ffmpeg_converter_app/l10n/app_localizations.dart';
 
 import '../../services/ffmpeg_service.dart';
 import '../../services/video_validator.dart';
@@ -27,7 +27,7 @@ class _EditorTabState extends State<EditorTab>
   // State
   String _mode = 'trim'; // 'trim' or 'merge'
   XFile? _selectedFile; // For Trim
-  List<XFile> _mergeFiles = []; // For Merge
+  final List<XFile> _mergeFiles = []; // For Merge
 
   // Trim State
   RangeValues _trimRange = const RangeValues(0, 100);
@@ -46,7 +46,17 @@ class _EditorTabState extends State<EditorTab>
   @override
   void initState() {
     super.initState();
-    _ffmpegService.initialize();
+    _initializeFFmpeg();
+  }
+
+  Future<void> _initializeFFmpeg() async {
+    try {
+      await _ffmpegService.initialize();
+    } catch (e) {
+      // FFmpeg initialization may fail on unsupported platforms (e.g., macOS without bundled binary)
+      // This is OK - the user will see an error when they try to process
+      debugPrint('FFmpeg initialization warning: $e');
+    }
   }
 
   // --- File Picking ---
@@ -85,15 +95,52 @@ class _EditorTabState extends State<EditorTab>
         setState(() {
           if (_mode == 'trim') {
             _selectedFile = xFile;
-            // Reset trim range (mock duration for now, ideally read from file)
-            _totalDurationSeconds = 100.0; // TODO: Get real duration
+            // Initialize with default duration, then fetch actual duration
+            _totalDurationSeconds = 300.0;
             _trimRange = RangeValues(0, _totalDurationSeconds);
+
+            // Fetch actual video duration asynchronously
+            _fetchVideoDuration(xFile!);
           } else {
             _mergeFiles.add(xFile!);
           }
           _outputFile = null;
         });
       }
+    }
+  }
+
+  Future<void> _fetchVideoDuration(XFile videoFile) async {
+    try {
+      debugPrint('🎬 Fetching actual video duration...');
+      final duration = await _ffmpegService.getVideoDuration(videoFile);
+
+      if (duration != null && duration > 0 && mounted) {
+        setState(() {
+          _totalDurationSeconds = duration;
+          _trimRange = RangeValues(0, duration);
+        });
+        debugPrint(
+          '✅ Updated trim range to actual duration: ${duration.toStringAsFixed(2)}s',
+        );
+
+        // Show snackbar to inform user
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Video duration detected: ${(duration / 60).toStringAsFixed(1)} minutes',
+              ),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        debugPrint('⚠️ Could not fetch video duration, using default 300s');
+      }
+    } catch (e) {
+      debugPrint('❌ Error fetching video duration: $e');
+      // Keep default 300s value
     }
   }
 
@@ -162,11 +209,12 @@ class _EditorTabState extends State<EditorTab>
       final result = await _ffmpegService.executeFFmpeg(
         args,
         onProgress: (p, m) {
-          if (mounted)
+          if (mounted) {
             setState(() {
               _progress = p;
               _statusMessage = m;
             });
+          }
         },
       );
 
@@ -275,7 +323,7 @@ class _EditorTabState extends State<EditorTab>
   Widget _buildMergeControls() {
     final l10n = AppLocalizations.of(context)!;
     // Placeholder for Merge Mode
-    return Center(child: Text(l10n.modeMerge + " (Coming Soon)"));
+    return Center(child: Text('${l10n.modeMerge} (Coming Soon)'));
   }
 
   Widget _buildDropZone(BuildContext context) {

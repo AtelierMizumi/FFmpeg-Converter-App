@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "/home/thuanc177/Documents/Git/Flutter/FFmpeg-Converter-App/linux"
+    "cmake.sourceDirectory": "/home/thuanc177/Documents/Git/Flutter/FFmpeg-Converter-App/linux",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

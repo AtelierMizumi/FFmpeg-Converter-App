@@ -7,7 +7,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:gap/gap.dart';
 import 'package:open_file/open_file.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_test_application/l10n/app_localizations.dart';
+import 'package:ffmpeg_converter_app/l10n/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../services/ffmpeg_service.dart';
 import '../../services/video_validator.dart';
@@ -119,6 +119,17 @@ class _ConverterTabState extends State<ConverterTab>
           return;
         }
 
+        // Show warning if exists (large file warning)
+        if (validation.warning != null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(validation.warning!),
+              duration: const Duration(seconds: 5),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+
         setState(() {
           _selectedFile = selectedXFile;
           _outputFile = null;
@@ -141,25 +152,43 @@ class _ConverterTabState extends State<ConverterTab>
     if (_selectedFile == null) return;
 
     // Check Permissions on Android
+    // Android 13+ (API 33+) uses granular media permissions (READ_MEDIA_VIDEO)
+    // which are already declared in AndroidManifest.xml
+    // File picker handles permission requests automatically
+    // No need for MANAGE_EXTERNAL_STORAGE permission (removed for Google Play compliance)
     if (Platform.isAndroid) {
-      if (await Permission.storage.request().isDenied) {
+      // For Android 13+, file_picker handles READ_MEDIA_VIDEO permission automatically
+      // For older Android versions, storage permission is handled by file_picker
+      // Only check if permission is permanently denied to guide user to settings
+      final storageStatus = await Permission.storage.status;
+      if (storageStatus.isPermanentlyDenied) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Storage permission is required.')),
+            SnackBar(
+              content: const Text(
+                'Storage permission is required. Please enable it in settings.',
+              ),
+              action: SnackBarAction(
+                label: 'Settings',
+                onPressed: () => openAppSettings(),
+              ),
+            ),
           );
         }
         return;
       }
 
-      // For Android 11+ (API 30+), Manage External Storage might be needed for broader access,
-      // but for basic scoped storage or MediaStore, standard permissions might suffice or differ.
-      // However, typical FFmpeg operations often need direct file path access.
-      if (await Permission.manageExternalStorage.isPermanentlyDenied) {
-        // Open settings if permanently denied
-        openAppSettings();
-      }
-      if (await Permission.manageExternalStorage.request().isDenied) {
-        // Fallback or specific handling
+      // Request permission if not granted (for Android 12 and below)
+      if (!storageStatus.isGranted && !storageStatus.isLimited) {
+        final result = await Permission.storage.request();
+        if (result.isDenied || result.isPermanentlyDenied) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Storage permission is required.')),
+            );
+          }
+          return;
+        }
       }
     }
 
@@ -491,16 +520,18 @@ class _ConverterTabState extends State<ConverterTab>
         onDragDone: (detail) async {
           if (detail.files.isNotEmpty) {
             final file = detail.files.first;
+            // Capture scaffold messenger before async gap
+            final messenger = ScaffoldMessenger.of(context);
             final validation = await VideoValidator.validateInputFile(file);
             if (!validation.isValid) {
-              if (mounted) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(validation.error!)));
-              }
+              if (!mounted) return;
+              messenger.showSnackBar(
+                SnackBar(content: Text(validation.error!)),
+              );
               return;
             }
 
+            if (!mounted) return;
             setState(() {
               _selectedFile = file;
               _outputFile = null;
@@ -735,14 +766,28 @@ class _ConverterTabState extends State<ConverterTab>
               (v) => setState(() => _container = v!),
             ),
             const Gap(16),
-            _buildDropdown(l10n.videoCodec, _videoCodec, [
-              'libx264',
-              'libx265',
-              'libvpx-vp9',
-              'libaom-av1',
-              'libxvid',
-              'copy',
-            ], (v) => setState(() => _videoCodec = v!)),
+            _buildDropdown(
+              l10n.videoCodec,
+              _videoCodec,
+              [
+                'libx264',
+                'libx265',
+                'libvpx-vp9',
+                'libaom-av1',
+                'libxvid',
+                'copy',
+              ],
+              (v) {
+                setState(() {
+                  _videoCodec = v!;
+                  // Adjust CRF if out of range for new codec
+                  final maxCrf = _getMaxCrfForCodec(v);
+                  if (_crf > maxCrf) {
+                    _crf = maxCrf.toDouble();
+                  }
+                });
+              },
+            ),
             const Gap(16),
             _buildDropdown(
               l10n.resolution,
@@ -769,13 +814,13 @@ class _ConverterTabState extends State<ConverterTab>
             Slider(
               value: _crf,
               min: 0,
-              max: 51,
-              divisions: 51,
+              max: _getMaxCrfForCodec(_videoCodec).toDouble(),
+              divisions: _getMaxCrfForCodec(_videoCodec),
               label: _crf.round().toString(),
               onChanged: (v) => setState(() => _crf = v),
             ),
             Text(
-              l10n.lowerBetter,
+              _getCrfHintText(),
               style: const TextStyle(color: Colors.grey, fontSize: 12),
             ),
 
@@ -806,5 +851,30 @@ class _ConverterTabState extends State<ConverterTab>
         ),
       ),
     );
+  }
+
+  /// Get maximum CRF value for the selected codec
+  int _getMaxCrfForCodec(String codec) {
+    if (codec == 'copy') {
+      return 51; // Not applicable, but provide default
+    } else if (codec.contains('vp9') || codec.contains('av1')) {
+      // VP9 and AV1 support CRF 0-63
+      return 63;
+    } else {
+      // H.264, H.265, Xvid and others use 0-51
+      return 51;
+    }
+  }
+
+  /// Get hint text for CRF slider based on codec
+  String _getCrfHintText() {
+    final l10n = AppLocalizations.of(context)!;
+    if (_videoCodec == 'copy') {
+      return 'Not applicable (copy mode)';
+    } else if (_videoCodec.contains('vp9') || _videoCodec.contains('av1')) {
+      return '${l10n.lowerBetter} (0-63 for VP9/AV1)';
+    } else {
+      return '${l10n.lowerBetter} (0-51 for H.264/H.265)';
+    }
   }
 }

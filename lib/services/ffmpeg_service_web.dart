@@ -86,4 +86,35 @@ class FFmpegServiceImpl implements FFmpegService {
     _ffmpeg.exit();
     _isLoaded = false;
   }
+
+  @override
+  Future<double?> getVideoDuration(XFile videoFile) async {
+    if (!_isLoaded) await initialize();
+
+    try {
+      debugPrint('📊 Getting video duration for: ${videoFile.name}');
+
+      // Load video into MEMFS
+      final inputData = await videoFile.readAsBytes();
+      final inputName =
+          'temp_${DateTime.now().millisecondsSinceEpoch}.${videoFile.name.split('.').last}';
+      _ffmpeg.writeFile(inputName, inputData);
+
+      // Run ffmpeg -i to get file info
+      // Note: ffmpeg.wasm doesn't have direct duration API, so we need to parse output
+      // This is a limitation of Web implementation
+      // For now, return null and let editor use default value
+
+      // Clean up
+      _ffmpeg.unlink(inputName);
+
+      debugPrint(
+        '⚠️ Video duration detection not fully supported on Web platform',
+      );
+      return null;
+    } catch (e) {
+      debugPrint('❌ Error getting video duration on Web: $e');
+      return null;
+    }
+  }
 }

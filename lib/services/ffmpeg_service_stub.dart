@@ -39,4 +39,11 @@ class FFmpegServiceImpl implements FFmpegService {
       'FFmpegService is not implemented for this platform',
     );
   }
+
+  @override
+  Future<double?> getVideoDuration(XFile videoFile) {
+    throw UnimplementedError(
+      'FFmpegService is not implemented for this platform',
+    );
+  }
 }
