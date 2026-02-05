@@ -34,6 +34,10 @@ class _ConverterTabState extends State<ConverterTab>
   bool _initialized = false;
   bool _isCancelling = false;
 
+  // Throttle progress updates to avoid excessive rebuilds
+  DateTime? _lastProgressUpdate;
+  static const _progressThrottleDuration = Duration(milliseconds: 100);
+
   // Expanded Settings
   String _videoCodec = 'libx264';
   String _preset = 'medium';
@@ -284,6 +288,15 @@ class _ConverterTabState extends State<ConverterTab>
         outputDirectory: _outputDirectory,
         outputFilename: customFilename,
         onProgress: (progress, message) {
+          // Throttle progress updates to avoid excessive UI rebuilds
+          final now = DateTime.now();
+          if (_lastProgressUpdate != null &&
+              now.difference(_lastProgressUpdate!) <
+                  _progressThrottleDuration) {
+            return; // Skip update if less than throttle duration
+          }
+          _lastProgressUpdate = now;
+
           if (mounted) {
             setState(() {
               _progress = progress;
@@ -384,6 +397,34 @@ class _ConverterTabState extends State<ConverterTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    // Show loading state while FFmpeg is initializing
+    if (!_initialized) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const Gap(16),
+            Text(
+              l10n.initializingFFmpeg,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const Gap(8),
+            Text(
+              _statusMessage,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: _statusMessage.startsWith('Error')
+                    ? Theme.of(context).colorScheme.error
+                    : Theme.of(context).colorScheme.outline,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     // Determine platform once preferably
     final isDesktop =
         !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
@@ -576,8 +617,8 @@ class _ConverterTabState extends State<ConverterTab>
                   label: const Text('Cancelling...'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).colorScheme.tertiary,
+                    foregroundColor: Theme.of(context).colorScheme.onTertiary,
                   ),
                 ),
               ] else ...[
@@ -596,8 +637,8 @@ class _ConverterTabState extends State<ConverterTab>
                     label: const Text('Cancel'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                      foregroundColor: Theme.of(context).colorScheme.onError,
                     ),
                   ),
               ],
@@ -609,8 +650,10 @@ class _ConverterTabState extends State<ConverterTab>
                     icon: const Icon(Icons.download),
                     label: Text(l10n.saveOutput),
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      foregroundColor: Theme.of(
+                        context,
+                      ).colorScheme.onSecondary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                   )
@@ -662,8 +705,8 @@ class _ConverterTabState extends State<ConverterTab>
           _statusMessage,
           style: TextStyle(
             color: _statusMessage.startsWith('Error')
-                ? Colors.red
-                : Colors.grey,
+                ? Theme.of(context).colorScheme.error
+                : Theme.of(context).colorScheme.outline,
           ),
         ),
       ],

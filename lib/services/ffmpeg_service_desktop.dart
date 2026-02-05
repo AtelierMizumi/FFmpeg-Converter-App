@@ -12,6 +12,12 @@ class FFmpegServiceImpl implements FFmpegService {
   final _mobileService = FFmpegServiceMobile();
   Process? _process;
 
+  // Pre-compiled RegExp for better performance (avoid creating on every stderr chunk)
+  static final _durationRegex = RegExp(
+    r'Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})',
+  );
+  static final _timeRegex = RegExp(r'time=(\d{2}):(\d{2}):(\d{2}\.\d{2})');
+
   bool get _isMobile => Platform.isAndroid || Platform.isIOS;
 
   @override
@@ -174,6 +180,9 @@ class FFmpegServiceImpl implements FFmpegService {
 
     _process = await Process.start(_ffmpegPath!, args);
 
+    // Drain stdout to prevent buffer blocking with large outputs
+    _process!.stdout.drain<void>();
+
     // Duration parsing state variables
     Duration? totalDuration;
 
@@ -183,9 +192,7 @@ class FFmpegServiceImpl implements FFmpegService {
         if (onProgress != null) {
           // Parse Duration: 00:00:05.12
           if (totalDuration == null) {
-            final durMatch = RegExp(
-              r'Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})',
-            ).firstMatch(data);
+            final durMatch = _durationRegex.firstMatch(data);
             if (durMatch != null) {
               try {
                 final h = int.parse(durMatch.group(1)!);
@@ -204,9 +211,7 @@ class FFmpegServiceImpl implements FFmpegService {
 
           // Parse time=00:00:02.50
           if (totalDuration != null) {
-            final timeMatch = RegExp(
-              r'time=(\d{2}):(\d{2}):(\d{2}\.\d{2})',
-            ).firstMatch(data);
+            final timeMatch = _timeRegex.firstMatch(data);
             if (timeMatch != null) {
               try {
                 final h = int.parse(timeMatch.group(1)!);
@@ -252,7 +257,8 @@ class FFmpegServiceImpl implements FFmpegService {
       return _mobileService.cancel();
     }
 
-    if (_process != null) return;
+    // Fixed: was incorrectly checking "!= null" which caused early return
+    if (_process == null) return;
 
     debugPrint('Cancelling FFmpeg process...');
     _process!.kill(ProcessSignal.sigterm);

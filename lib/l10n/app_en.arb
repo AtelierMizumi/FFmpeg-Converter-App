@@ -54,5 +54,6 @@
   "processTrim": "Process Trim",
   "editorMode": "Editor Mode",
   "modeTrim": "Trim Mode",
-  "modeMerge": "Merge Mode"
+  "modeMerge": "Merge Mode",
+  "initializingFFmpeg": "Initializing FFmpeg..."
 }

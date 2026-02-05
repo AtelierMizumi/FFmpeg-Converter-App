@@ -188,4 +188,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get modeMerge => 'Merge Mode';
+
+  @override
+  String get initializingFFmpeg => 'Initializing FFmpeg...';
 }

@@ -54,5 +54,6 @@
   "processTrim": "Tiến hành Cắt",
   "editorMode": "Chế độ Biên tập",
   "modeTrim": "Chế độ Cắt",
-  "modeMerge": "Chế độ Ghép"
+  "modeMerge": "Chế độ Ghép",
+  "initializingFFmpeg": "Đang khởi tạo FFmpeg..."
 }

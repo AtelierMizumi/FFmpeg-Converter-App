@@ -43,5 +43,17 @@
   "sectionReferences": "参考文献",
   "developedBy": "開発者",
   "technologies": "使用技術",
-  "librariesLicenses": "サードパーティライブラリとライセンス"
+  "librariesLicenses": "サードパーティライブラリとライセンス",
+  "tabEditor": "編集",
+  "trimVideo": "動画のトリミング",
+  "mergeVideo": "動画の結合",
+  "startTime": "開始時間",
+  "endTime": "終了時間",
+  "addClip": "クリップを追加",
+  "processMerge": "結合処理",
+  "processTrim": "トリミング処理",
+  "editorMode": "編集モード",
+  "modeTrim": "トリミングモード",
+  "modeMerge": "結合モード",
+  "initializingFFmpeg": "FFmpegを初期化中..."
 }
